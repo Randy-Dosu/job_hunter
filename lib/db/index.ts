@@ -8,6 +8,57 @@ export type SqlValue = string | number | null;
 
 const globalRef = globalThis as unknown as { __jobHunterDb?: DatabaseSync };
 
+/**
+ * Additive migrations for databases created before a column existed.
+ * `CREATE TABLE IF NOT EXISTS` never alters an existing table, so new columns
+ * have to be added explicitly. Kept declarative and idempotent.
+ */
+const ADDED_COLUMNS: Record<string, { name: string; ddl: string }[]> = {
+  users: [{ name: "role", ddl: "role TEXT NOT NULL DEFAULT 'user'" }],
+  applications: [{ name: "reminder_sent_at", ddl: "reminder_sent_at TEXT" }],
+  notifications: [
+    { name: "channel", ddl: "channel TEXT NOT NULL DEFAULT 'in_app'" },
+    { name: "delivery_status", ddl: "delivery_status TEXT NOT NULL DEFAULT 'stored'" },
+    { name: "delivery_error", ddl: "delivery_error TEXT NOT NULL DEFAULT ''" },
+    { name: "delivered_at", ddl: "delivered_at TEXT" },
+    { name: "dedupe_key", ddl: "dedupe_key TEXT" },
+  ],
+};
+
+function migrate(db: DatabaseSync) {
+  for (const [table, columns] of Object.entries(ADDED_COLUMNS)) {
+    const existing = new Set(
+      (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((row) => row.name),
+    );
+    for (const column of columns) {
+      if (!existing.has(column.name)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column.ddl}`);
+    }
+  }
+  // The demo account owns source governance so the admin console is reachable offline.
+  db.prepare("UPDATE users SET role = 'admin' WHERE email = ? AND role <> 'admin'").run("demo@jobhunter.app");
+
+}
+
+/** Governance row for user-supplied links (FR-017). Runs after seeding on every open. */
+function ensureManualSource(db: DatabaseSync) {
+  // Governance row for user-supplied links (FR-017), idempotent by slug.
+  const manual = db.prepare("SELECT id FROM job_sources WHERE slug = 'manual'").get() as { id: string } | undefined;
+  if (!manual) {
+    db.prepare(
+      `INSERT INTO job_sources (id, name, slug, source_type, access_method, terms_url, terms_reviewed_at, enabled,
+        rate_limit_config_json, supported_markets, notes)
+       VALUES (?, 'Manual import', 'manual', 'user_supplied', ?, ?, ?, 1, ?, 'Any', ?)`,
+    ).run(
+      crypto.randomUUID(),
+      "Single URL pasted by the user",
+      "https://jobhunter.app/terms/manual-import",
+      new Date().toISOString(),
+      JSON.stringify({ maxRequestsPerDay: 20, timeoutMs: 8000 }),
+      "User-supplied link. Fetched once with no login or bypass. The user is responsible for that site's terms.",
+    );
+  }
+}
+
 function open(): DatabaseSync {
   const file = process.env.DATABASE_PATH
     ? path.resolve(process.env.DATABASE_PATH)
@@ -15,7 +66,9 @@ function open(): DatabaseSync {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const db = new DatabaseSync(file);
   db.exec(SCHEMA_SQL);
+  migrate(db);
   seedIfEmpty(db);
+  ensureManualSource(db);
   return db;
 }
 

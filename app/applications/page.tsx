@@ -9,8 +9,8 @@ import { all } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 const GROUPS: { key: string[]; label: string; hint: string }[] = [
-  { key: ["preparing", "approved"], label: "In preparation", hint: "Assembled but not yet sent" },
-  { key: ["awaiting_manual_completion"], label: "Awaiting your manual action", hint: "Open the employer page and finish the form" },
+  { key: ["saved", "reviewing", "preparing", "approved"], label: "In preparation", hint: "Saved, reviewed or assembled — not yet sent" },
+  { key: ["awaiting_manual_completion", "confirmation_pending"], label: "Awaiting your manual action", hint: "Finish on the employer page, then record the reference" },
   { key: ["submitted", "interview", "offer"], label: "Active", hint: "Submitted or in conversation" },
   { key: ["rejected", "withdrawn", "closed"], label: "Closed", hint: "No further action" },
 ];
@@ -41,8 +41,8 @@ export default async function ApplicationsPage() {
 
   const counts = {
     active: applications.filter((app) => ["submitted", "interview", "offer"].includes(app.status)).length,
-    awaiting: applications.filter((app) => app.status === "awaiting_manual_completion").length,
-    preparing: applications.filter((app) => ["preparing", "approved"].includes(app.status)).length,
+    awaiting: applications.filter((app) => ["awaiting_manual_completion", "confirmation_pending"].includes(app.status)).length,
+    preparing: applications.filter((app) => ["saved", "reviewing", "preparing", "approved"].includes(app.status)).length,
   };
 
   return (

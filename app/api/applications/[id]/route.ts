@@ -5,7 +5,20 @@ import { fail, json, withUser } from "@/lib/api";
 
 const schema = z.object({
   status: z
-    .enum(["saved", "preparing", "approved", "awaiting_manual_completion", "interview", "rejected", "withdrawn", "closed", "offer"])
+    .enum([
+      "saved",
+      "reviewing",
+      "preparing",
+      "approved",
+      "awaiting_manual_completion",
+      "confirmation_pending",
+      "submitted",
+      "interview",
+      "rejected",
+      "withdrawn",
+      "closed",
+      "offer",
+    ])
     .optional(),
   notes: z.string().max(4000).optional(),
   nextAction: z.string().max(300).optional(),

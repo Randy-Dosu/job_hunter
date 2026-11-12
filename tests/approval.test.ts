@@ -227,3 +227,102 @@ describe("approval gate", () => {
     expect(approvals.approvePackage(otherUser, pkg.id).code).toBe("not_found");
   });
 });
+
+function buildPackageForNewJob(coverLetter = "Dear team,") {
+  const jobId = crypto.randomUUID();
+  const now = new Date().toISOString();
+  db.insert("jobs", {
+    id: jobId,
+    source_id: "44444444-4444-4444-8444-444444444444",
+    external_id: `ext-${jobId}`,
+    canonical_url: `https://example.com/jobs/${jobId}`,
+    application_url: `https://employer.example.com/apply/${jobId}`,
+    title: "Frontend Developer",
+    company: "Example Ltd",
+    location: "Remote",
+    remote_policy: "remote",
+    description: "React role",
+    responsibilities: "",
+    requirements: "React",
+    salary: null,
+    employment_type: "full-time",
+    seniority: "junior",
+    posted_at: now,
+    deadline: null,
+    status: "open",
+    status_checked_at: now,
+    content_hash: `hash-${jobId}`,
+    fingerprint: `example|frontend|${jobId}`,
+    first_seen_at: now,
+    last_seen_at: now,
+    raw_json: "{}",
+  });
+  return approvals.createPackage({
+    userId: USER,
+    jobId,
+    destinationUrl: `https://employer.example.com/apply/${jobId}`,
+    resumeId: RESUME,
+    resumeText: RESUME_TEXT,
+    coverLetter,
+    answers: [{ question: "Why us?", answer: "Because." }],
+  });
+}
+
+describe("save and reject", () => {
+  it("parks a package without approving it", () => {
+    const pkg = buildPackageForNewJob();
+    expect(approvals.savePackageForLater(USER, pkg.id).ok).toBe(true);
+    const row = db.get<{ status: string }>("SELECT status FROM application_packages WHERE id = ?", pkg.id)!;
+    expect(row.status).toBe("SAVED");
+    // A saved package is still unapproved, so handoff stays blocked.
+    expect(approvals.handoffPackage(USER, pkg.id).code).toBe("not_approved");
+    expect(approvals.approvePackage(USER, pkg.id).ok).toBe(true);
+  });
+
+  it("rejects a package, revokes approval and blocks handoff", () => {
+    const pkg = buildPackageForNewJob();
+    expect(approvals.approvePackage(USER, pkg.id).ok).toBe(true);
+    expect(approvals.rejectPackage(USER, pkg.id, "Salary too low").ok).toBe(true);
+    expect(approvals.handoffPackage(USER, pkg.id).code).toBe("rejected");
+    expect(approvals.approvePackage(USER, pkg.id).code).toBe("rejected");
+    const row = db.get<{ status: string }>("SELECT status FROM application_packages WHERE id = ?", pkg.id)!;
+    expect(row.status).toBe("REJECTED");
+    const approval = db.get<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM application_approvals WHERE package_id = ? AND revoked_at IS NULL",
+      pkg.id,
+    )!;
+    expect(approval.count).toBe(0);
+  });
+
+  it("refuses to reject or park an application that was already submitted", () => {
+    const pkg = buildPackageForNewJob();
+    approvals.approvePackage(USER, pkg.id);
+    approvals.handoffPackage(USER, pkg.id);
+    const application = db.get<{ id: string }>(
+      "SELECT id FROM applications WHERE user_id = ? AND job_id = ?",
+      USER,
+      pkg.job_id,
+    )!;
+    expect(approvals.markSubmitted(USER, application.id, "REF-2").ok).toBe(true);
+    expect(approvals.rejectPackage(USER, pkg.id).code).toBe("already_submitted");
+    expect(approvals.savePackageForLater(USER, pkg.id).code).toBe("in_flight");
+  });
+
+  it("records a follow-up date when a submission is confirmed", () => {
+    const pkg = buildPackageForNewJob();
+    approvals.approvePackage(USER, pkg.id);
+    approvals.handoffPackage(USER, pkg.id);
+    const application = db.get<{ id: string }>(
+      "SELECT id FROM applications WHERE user_id = ? AND job_id = ?",
+      USER,
+      pkg.job_id,
+    )!;
+    approvals.markSubmitted(USER, application.id, "REF-3");
+    const row = db.get<{ next_action_at: string | null }>(
+      "SELECT next_action_at FROM applications WHERE id = ?",
+      application.id,
+    )!;
+    expect(row.next_action_at).toBeTruthy();
+    expect(new Date(row.next_action_at!).getTime()).toBeGreaterThan(Date.now());
+  });
+});

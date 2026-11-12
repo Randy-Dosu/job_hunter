@@ -6,14 +6,14 @@ import { hashPassword, verifyPassword } from "@/lib/password";
 export const SESSION_COOKIE = "jh_session";
 const SESSION_DAYS = 14;
 
-export type SessionUser = { id: string; email: string; name: string };
+export type SessionUser = { id: string; email: string; name: string; role: string };
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  const row = get<{ id: string; email: string; name: string }>(
-    `SELECT u.id, u.email, u.name FROM sessions s
+  const row = get<{ id: string; email: string; name: string; role: string }>(
+    `SELECT u.id, u.email, u.name, u.role FROM sessions s
      JOIN users u ON u.id = s.user_id
      WHERE s.id = ? AND s.expires_at > ?`,
     token,

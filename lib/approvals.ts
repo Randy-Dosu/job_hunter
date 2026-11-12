@@ -169,6 +169,9 @@ export function approvePackage(userId: string, packageId: string, method = "expl
   if (!loaded.job || loaded.job.status === "closed") {
     return { ok: false, error: "This vacancy is closed and can no longer be applied to.", code: "job_closed" };
   }
+  if (loaded.pkg.status === "REJECTED") {
+    return { ok: false, error: "This package was rejected. Assemble a fresh one if you change your mind.", code: "rejected" };
+  }
   if (!loaded.resume) return { ok: false, error: "Attach a tailored resume before approving.", code: "missing_resume" };
   if (loaded.pkg.package_hash !== loaded.currentHash) {
     return { ok: false, error: "The package changed since it was assembled. Review it again, then approve.", code: "hash_mismatch" };
@@ -214,6 +217,54 @@ export function approvePackage(userId: string, packageId: string, method = "expl
   return { ok: true };
 }
 
+/** "Save for later": keep the draft, decide another day. Explicitly not an approval. */
+export function savePackageForLater(userId: string, packageId: string): ActionResult {
+  const loaded = loadPackage(userId, packageId);
+  if (!loaded) return { ok: false, error: "Package not found", code: "not_found" };
+  if (["SUBMITTED", "SUBMISSION_PENDING"].includes(loaded.pkg.status)) {
+    return { ok: false, error: "This package is already in flight and cannot be parked.", code: "in_flight" };
+  }
+  const now = nowIso();
+  run("UPDATE application_packages SET status = 'SAVED', updated_at = ? WHERE id = ? AND user_id = ?", now, packageId, userId);
+  const application = get<{ id: string; status: string }>(
+    "SELECT id, status FROM applications WHERE user_id = ? AND job_id = ?",
+    userId,
+    loaded.pkg.job_id,
+  );
+  if (application && !["submitted", "interview", "offer"].includes(application.status)) {
+    run("UPDATE applications SET status = 'saved', last_updated_at = ? WHERE id = ?", now, application.id);
+  }
+  audit(userId, "package.saved_for_later", "application_package", packageId);
+  return { ok: true };
+}
+
+/** "Reject / dismiss": closes the loop without pretending anything was sent. */
+export function rejectPackage(userId: string, packageId: string, reason = ""): ActionResult {
+  const loaded = loadPackage(userId, packageId);
+  if (!loaded) return { ok: false, error: "Package not found", code: "not_found" };
+  const application = get<{ id: string; status: string }>(
+    "SELECT id, status FROM applications WHERE user_id = ? AND job_id = ?",
+    userId,
+    loaded.pkg.job_id,
+  );
+  if (application && ["submitted", "interview", "offer"].includes(application.status)) {
+    return { ok: false, error: "This application was already submitted. Update it from the tracker instead.", code: "already_submitted" };
+  }
+  const now = nowIso();
+  run("UPDATE application_approvals SET revoked_at = ? WHERE package_id = ? AND revoked_at IS NULL", now, packageId);
+  run("UPDATE application_packages SET status = 'REJECTED', updated_at = ? WHERE id = ? AND user_id = ?", now, packageId, userId);
+  if (application) {
+    run(
+      "UPDATE applications SET status = 'withdrawn', notes = ?, last_updated_at = ? WHERE id = ?",
+      `Dismissed${reason ? `: ${reason.slice(0, 300)}` : ""}`,
+      now,
+      application.id,
+    );
+  }
+  audit(userId, "package.rejected", "application_package", packageId, { reason: reason.slice(0, 300) });
+  return { ok: true };
+}
+
 export function revokeApproval(userId: string, packageId: string): ActionResult {
   run("UPDATE application_approvals SET revoked_at = ? WHERE package_id = ? AND revoked_at IS NULL", nowIso(), packageId);
   run("UPDATE application_packages SET status = 'PENDING_APPROVAL', updated_at = ? WHERE id = ? AND user_id = ?", nowIso(), packageId, userId);
@@ -228,6 +279,9 @@ export function revokeApproval(userId: string, packageId: string): ActionResult 
 export function handoffPackage(userId: string, packageId: string): ActionResult & { destinationUrl?: string } {
   const loaded = loadPackage(userId, packageId);
   if (!loaded) return { ok: false, error: "Package not found", code: "not_found" };
+  if (loaded.pkg.status === "REJECTED") {
+    return { ok: false, error: "This package was rejected, so it cannot be handed off.", code: "rejected" };
+  }
   if (!loaded.approval) return { ok: false, error: "Approval required before opening the application.", code: "not_approved" };
   if (loaded.approval.approval_hash !== loaded.currentHash) {
     return { ok: false, error: "Approval does not match the current package. Approve the latest version first.", code: "stale_approval" };
@@ -284,12 +338,14 @@ export function markSubmitted(userId: string, applicationId: string, confirmatio
   if (!loaded || approval.approval_hash !== loaded.currentHash) {
     return { ok: false, error: "The package changed after approval. Re-approve before submitting.", code: "stale_approval" };
   }
+  const now = new Date();
   run(
-    "UPDATE applications SET status = 'submitted', submitted_at = ?, confirmation_reference = ?, last_updated_at = ?, next_action = ? WHERE id = ?",
-    nowIso(),
+    "UPDATE applications SET status = 'submitted', submitted_at = ?, confirmation_reference = ?, last_updated_at = ?, next_action = ?, next_action_at = ?, reminder_sent_at = NULL WHERE id = ?",
+    now.toISOString(),
     confirmationReference.slice(0, 200),
-    nowIso(),
+    now.toISOString(),
     "Follow up in 10 days if you have not heard back",
+    new Date(now.getTime() + 10 * 86_400_000).toISOString(),
     applicationId,
   );
   run("UPDATE application_packages SET status = 'SUBMITTED', updated_at = ? WHERE id = ?", nowIso(), app.package_id);

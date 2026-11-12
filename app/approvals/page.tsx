@@ -16,6 +16,9 @@ const STATUS_COPY: Record<string, { label: string; className: string }> = {
   SUBMISSION_PENDING: { label: "Approved — ready to submit", className: "chip-moss" },
   SUBMITTED: { label: "Marked submitted", className: "chip" },
   REVOKED: { label: "Approval revoked", className: "chip-clay" },
+  APPROVED: { label: "Approved", className: "chip-moss" },
+  SAVED: { label: "Saved for later", className: "chip" },
+  REJECTED: { label: "Rejected by you", className: "chip-clay" },
 };
 
 export default async function ApprovalsPage() {
@@ -49,7 +52,9 @@ export default async function ApprovalsPage() {
     return { pkg, valid: Boolean(approval && approval.approval_hash === currentHash), approval };
   });
 
-  const waiting = rows.filter((row) => !row.valid && row.pkg.status !== "SUBMITTED").length;
+  const waiting = rows.filter(
+    (row) => !row.valid && !["SUBMITTED", "SAVED", "REJECTED"].includes(row.pkg.status),
+  ).length;
 
   return (
     <AppShell>

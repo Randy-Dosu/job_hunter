@@ -7,9 +7,12 @@ import { ChevronDown, ExternalLink, Loader2, Save } from "lucide-react";
 import { CompanyMark } from "@/components/ui";
 
 const STATUSES = [
+  "saved",
+  "reviewing",
   "preparing",
   "approved",
   "awaiting_manual_completion",
+  "confirmation_pending",
   "submitted",
   "interview",
   "offer",
@@ -19,9 +22,12 @@ const STATUSES = [
 ];
 
 const STATUS_STYLES: Record<string, string> = {
+  saved: "chip",
+  reviewing: "chip",
   preparing: "chip",
   approved: "chip-moss",
   awaiting_manual_completion: "chip-warn",
+  confirmation_pending: "chip-warn",
   submitted: "chip-moss",
   interview: "chip-moss",
   offer: "chip-moss",

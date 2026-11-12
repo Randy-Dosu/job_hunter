@@ -5,6 +5,7 @@ import { adapters } from "@/lib/sources/adapters";
 import { jobKeys } from "@/lib/sources/normalize";
 import type { NormalizedJob, SearchCriteria } from "@/lib/sources/types";
 import { truncate } from "@/lib/text";
+import { notify, runAlertSweep } from "@/lib/notify";
 
 export type SearchCounts = {
   sourcesAttempted: number;
@@ -157,6 +158,82 @@ function upsertJob(
   return { id, isNew: true, changed: false };
 }
 
+const STALE_DAYS = 7;
+const ABANDONED_DAYS = 21;
+
+export type LivenessResult = { checked: number; closed: number; uncertain: number; notifications: number };
+
+/**
+ * Vacancy liveness (FR-014).
+ *
+ * A listing is only "open" while we have recent evidence: the source returned it
+ * inside the freshness window. Past the deadline, or unseen for a long stretch,
+ * we stop claiming it is live. The status is conservative — "uncertain" means
+ * exactly that, and the UI says so.
+ */
+export async function recheckJobLiveness(now: Date = new Date()): Promise<LivenessResult> {
+  const nowMs = now.getTime();
+  const nowIsoValue = now.toISOString();
+  const staleCutoff = new Date(nowMs - STALE_DAYS * 86_400_000).toISOString();
+  const abandonedCutoff = new Date(nowMs - ABANDONED_DAYS * 86_400_000).toISOString();
+  const result: LivenessResult = { checked: 0, closed: 0, uncertain: 0, notifications: 0 };
+
+  const rows = all<{ id: string; status: string; deadline: string | null; last_seen_at: string; title: string; company: string }>(
+    "SELECT id, status, deadline, last_seen_at, title, company FROM jobs WHERE status <> 'closed'",
+  );
+
+  const changed: { id: string; status: "closed" | "uncertain"; title: string; company: string }[] = [];
+
+  for (const job of rows) {
+    result.checked += 1;
+    const deadlinePassed = job.deadline ? new Date(job.deadline).getTime() < nowMs : false;
+    if (deadlinePassed) {
+      run("UPDATE jobs SET status = 'closed', status_checked_at = ? WHERE id = ?", nowIsoValue, job.id);
+      changed.push({ id: job.id, status: "closed", title: job.title, company: job.company });
+      continue;
+    }
+    if (job.status === "open" && job.last_seen_at < staleCutoff) {
+      run("UPDATE jobs SET status = 'uncertain', status_checked_at = ? WHERE id = ?", nowIsoValue, job.id);
+      changed.push({ id: job.id, status: "uncertain", title: job.title, company: job.company });
+      continue;
+    }
+    if (job.status === "uncertain" && job.last_seen_at < abandonedCutoff) {
+      run("UPDATE jobs SET status = 'closed', status_checked_at = ? WHERE id = ?", nowIsoValue, job.id);
+      changed.push({ id: job.id, status: "closed", title: job.title, company: job.company });
+    }
+  }
+
+  // Tell affected users once per job, never repeatedly.
+  for (const job of changed) {
+    if (job.status === "closed") result.closed += 1;
+    else result.uncertain += 1;
+
+    const affected = all<{ user_id: string }>(
+      `SELECT DISTINCT m.user_id FROM job_matches m
+       WHERE m.job_id = ? AND m.verdict IN ('strong','possible')
+         AND EXISTS (SELECT 1 FROM application_packages p WHERE p.user_id = m.user_id AND p.job_id = m.job_id)`,
+      job.id,
+    );
+    for (const user of affected) {
+      const outcome = await notify({
+        userId: user.user_id,
+        type: "vacancy_closed",
+        title: job.status === "closed" ? `Closed: ${job.title} at ${job.company}` : `Unverified: ${job.title} at ${job.company}`,
+        body:
+          job.status === "closed"
+            ? "The closing date passed or the source stopped returning this listing. Approvals and handoff for it are now blocked."
+            : "This listing has not appeared in recent searches. Check the employer site before relying on it.",
+        payload: { jobId: job.id, status: job.status },
+        channel: "both",
+        dedupeKey: `${job.status}:${user.user_id}:${job.id}`,
+      });
+      if (!outcome.deduped) result.notifications += 1;
+    }
+  }
+
+  return result;
+}
+
 export function rescanMatches(userId: string) {
   const context = getProfileContext(userId);
   const jobs = all<JobRow>("SELECT * FROM jobs");
@@ -252,6 +329,10 @@ export async function runSearch(userId: string, trigger: "manual" | "scheduled" 
   };
   const errors: string[] = [];
 
+  // Conservative liveness first: a listing we can no longer verify must not be
+  // presented as live, and a closed one must not keep a valid approval.
+  await recheckJobLiveness(new Date(startedAt));
+
   const sourceRows = all<{ id: string; slug: string }>("SELECT id, slug FROM job_sources");
   const sourceBySlug = new Map(sourceRows.map((row) => [row.slug, row.id]));
 
@@ -262,6 +343,7 @@ export async function runSearch(userId: string, trigger: "manual" | "scheduled" 
   );
 
   const seenIds = new Set<string>();
+  const changedJobs: { id: string; title: string; company: string }[] = [];
   for (const { adapter, outcome } of results) {
     const sourceId = sourceBySlug.get(adapter.slug);
     if (!sourceId) continue;
@@ -272,8 +354,9 @@ export async function runSearch(userId: string, trigger: "manual" | "scheduled" 
     if (outcome.usedFixture) counts.fixtureFallback.push(adapter.name);
     counts.discovered += outcome.jobs.length;
     for (const job of outcome.jobs) {
-      const { id } = upsertJob(userId, sourceId, job, counts);
+      const { id, changed } = upsertJob(userId, sourceId, job, counts);
       seenIds.add(id);
+      if (changed) changedJobs.push({ id, title: job.title, company: job.company });
     }
     run(
       "UPDATE job_sources SET last_run_at = ?, last_status = ? WHERE id = ?",
@@ -304,18 +387,33 @@ export async function runSearch(userId: string, trigger: "manual" | "scheduled" 
     userId,
   );
 
-  insert("notifications", {
-    id: uid(),
-    user_id: userId,
+  await notify({
+    userId,
     type: "digest",
     title: `Daily search complete — ${counts.created} new role${counts.created === 1 ? "" : "s"}`,
     body: strongJobs.length
       ? `Top matches: ${strongJobs.map((job) => `${job.title} at ${job.company}`).join("; ")}. ${counts.duplicates} duplicate listings removed.`
       : `${counts.discovered} listings reviewed, ${counts.duplicates} duplicates removed. No strong matches in this run.`,
-    payload_json: JSON.stringify({ runId, counts }),
-    read_at: null,
-    created_at: finishedAt,
+    payload: { runId, counts },
+    channel: "both",
+    dedupeKey: `digest:${userId}:${runId}`,
   });
+
+  // Material listing changes (FR-016): tell the user what moved, once per version.
+  for (const job of changedJobs) {
+    await notify({
+      userId,
+      type: "job_changed",
+      title: `Listing updated — ${job.title} at ${job.company}`,
+      body: "Pay, deadline or requirements changed since this role first appeared. Re-read the listing before tailoring an application.",
+      payload: { jobId: job.id, runId },
+      channel: "in_app",
+      dedupeKey: `changed:${userId}:${job.id}:${startedAt}`,
+    });
+  }
+
+  // Immediate deadline and follow-up alerts ride along with every run.
+  await runAlertSweep(new Date(finishedAt), userId);
 
   insert("audit_events", {
     id: uid(),

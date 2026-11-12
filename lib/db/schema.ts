@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'user',            -- user | admin
   created_at TEXT NOT NULL
 );
 
@@ -202,7 +203,7 @@ CREATE TABLE IF NOT EXISTS application_packages (
   answers_json TEXT NOT NULL DEFAULT '[]',
   destination_url TEXT NOT NULL,
   package_hash TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL',
+  status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL', -- PENDING_APPROVAL | APPROVED | SUBMISSION_PENDING | SUBMITTED | SAVED | REJECTED
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -224,23 +225,43 @@ CREATE TABLE IF NOT EXISTS applications (
   job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
   package_id TEXT,
   status TEXT NOT NULL DEFAULT 'preparing',
+  -- saved | reviewing | preparing | approved | awaiting_manual_completion | confirmation_pending
+  -- | submitted | interview | offer | rejected | withdrawn | closed
   submitted_at TEXT,
   confirmation_reference TEXT,
   last_updated_at TEXT NOT NULL,
   notes TEXT NOT NULL DEFAULT '',
   next_action TEXT NOT NULL DEFAULT '',
   next_action_at TEXT,
+  reminder_sent_at TEXT,
   UNIQUE(user_id, job_id)
 );
 
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL,
+  type TEXT NOT NULL,                           -- digest | deadline | job_changed | reminder | vacancy_closed
   title TEXT NOT NULL,
   body TEXT NOT NULL DEFAULT '',
   payload_json TEXT NOT NULL DEFAULT '{}',
+  channel TEXT NOT NULL DEFAULT 'in_app',       -- in_app | email | both
+  delivery_status TEXT NOT NULL DEFAULT 'stored', -- stored | sent | suppressed | failed
+  delivery_error TEXT NOT NULL DEFAULT '',
+  delivered_at TEXT,
+  dedupe_key TEXT,
   read_at TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_dedupe ON notifications(user_id, dedupe_key)
+  WHERE dedupe_key IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS resume_variants (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  role_family TEXT NOT NULL DEFAULT '',
+  emphasis_json TEXT NOT NULL DEFAULT '[]',
+  is_default INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
 

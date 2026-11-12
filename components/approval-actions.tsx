@@ -6,10 +6,12 @@ import {
   AlertTriangle,
   ArrowUpRight,
   BadgeCheck,
+  Bookmark,
   CheckCircle2,
   Loader2,
   RotateCcw,
   ShieldCheck,
+  XCircle,
 } from "lucide-react";
 
 export function ApprovalActions({
@@ -77,6 +79,32 @@ export function ApprovalActions({
     }
   };
 
+  const saveForLater = async () => {
+    setBusy("save");
+    setError(null);
+    try {
+      await call(`/api/application-packages/${packageId}/save`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save this package");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const reject = async () => {
+    setBusy("reject");
+    setError(null);
+    try {
+      await call(`/api/application-packages/${packageId}/reject`, {});
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reject this package");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const handoff = async () => {
     setBusy("handoff");
     setError(null);
@@ -132,6 +160,17 @@ export function ApprovalActions({
         </div>
       )}
 
+      {status === "REJECTED" ? (
+        <p className="rounded-md bg-clay-50 px-3 py-2 text-[11px] text-clay-700">
+          You rejected this package, so approval and handoff are closed. Assemble a new package from the job if you change your mind.
+        </p>
+      ) : null}
+      {status === "SAVED" ? (
+        <p className="rounded-md bg-[#fbfaf8] px-3 py-2 text-[11px] text-ink-soft">
+          Saved for later. Nothing has been approved or sent; the package is kept exactly as you left it.
+        </p>
+      ) : null}
+
       {blocked ? (
         <p className="rounded-md bg-clay-50 px-3 py-2 text-[11px] text-clay-700">
           {unsupportedCount > 0
@@ -165,6 +204,17 @@ export function ApprovalActions({
             {busy === "approve" ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
             Approve this package
           </button>
+          <div className="flex gap-2">
+            <button type="button" className="btn-secondary btn-sm flex-1" onClick={saveForLater} disabled={busy === "save"}>
+              {busy === "save" ? <Loader2 size={12} className="animate-spin" /> : <Bookmark size={12} />} Save for later
+            </button>
+            <button type="button" className="btn-ghost btn-sm flex-1 text-clay-700" onClick={reject} disabled={busy === "reject"}>
+              {busy === "reject" ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />} Reject
+            </button>
+          </div>
+          <p className="text-center text-[10px] leading-relaxed text-muted">
+            Saving parks the draft without approving it. Rejecting closes this vacancy for you and revokes any earlier approval.
+          </p>
         </>
       ) : (
         <>

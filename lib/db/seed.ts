@@ -204,11 +204,12 @@ export function seedIfEmpty(db: DatabaseSync) {
 
   db.exec("BEGIN");
   try {
-    db.prepare("INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)").run(
+    db.prepare("INSERT INTO users (id, email, name, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)").run(
       userId,
       DEMO_EMAIL,
       "Ama Serwaa",
       hashPassword(DEMO_PASSWORD),
+      "admin",
       now,
     );
 
@@ -321,6 +322,17 @@ export function seedIfEmpty(db: DatabaseSync) {
         markets: "Europe, global remote",
         notes: "Free public API for job aggregation. Pagination supported.",
         rate: { maxRequestsPerHour: 6, timeoutMs: 8000 },
+      },
+      {
+        name: "Manual import",
+        slug: "manual",
+        type: "user_supplied",
+        access: "Single URL pasted by the user",
+        terms: "https://jobhunter.app/terms/manual-import",
+        markets: "Any",
+        notes:
+          "User-supplied link. Fetched once, politely, with no login, no CAPTCHA handling and no bypass of access controls. The user is responsible for the terms of the site they paste.",
+        rate: { maxRequestsPerDay: 20, timeoutMs: 8000 },
       },
       {
         name: "Remote OK",
