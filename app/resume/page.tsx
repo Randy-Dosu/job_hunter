@@ -2,11 +2,13 @@ import Link from "next/link";
 import { ArrowRight, Check, FileText, ShieldCheck, X } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { FactEditor, ResumeUpload } from "@/components/resume-tools";
+import { ResumeVariants } from "@/components/resume-variants";
 import { Stat, formatDate } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { getProfileContext } from "@/lib/profile";
 import { all } from "@/lib/db";
 import { highestEducation, totalYearsExperience } from "@/lib/matching/score";
+import { listVariants } from "@/lib/resume/variants";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,13 @@ export default async function ResumeProfilePage() {
   const pending = context.evidence.filter((fact) => fact.verification_status !== "verified");
   const years = totalYearsExperience(context.snapshot.facts);
   const education = highestEducation(context.snapshot.facts);
+  const variants = listVariants(user.id).map((variant) => ({
+    id: variant.id,
+    name: variant.name,
+    roleFamily: variant.roleFamily,
+    emphasis: variant.emphasis,
+    isDefault: variant.isDefault,
+  }));
 
   return (
     <AppShell>
@@ -99,6 +108,8 @@ export default async function ResumeProfilePage() {
               <ResumeUpload />
             </div>
           </section>
+
+          <ResumeVariants variants={variants} />
 
           <section className="rounded-[10px] border border-line bg-surface p-4">
             <h2 className="text-[13px] font-semibold text-ink">What the generator may do</h2>

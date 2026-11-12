@@ -9,6 +9,15 @@ export function fail(error: string, status = 400, extra: Record<string, unknown>
   return NextResponse.json({ error, ...extra }, { status });
 }
 
+/** 429 with a retry hint, used by the auth rate limiter. */
+export function tooMany(retryAfterMs: number, message = "Too many attempts. Wait a minute and try again.") {
+  const seconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
+  return NextResponse.json(
+    { error: message, retryAfterSeconds: seconds },
+    { status: 429, headers: { "retry-after": String(seconds) } },
+  );
+}
+
 /** Every API handler resolves the caller from the session cookie — never from the body. */
 export async function withUser<T>(handler: (user: SessionUser) => Promise<T> | T) {
   const user = await getSessionUser();

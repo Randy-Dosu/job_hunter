@@ -10,6 +10,7 @@ import { ensureBootstrapSearch, listMatches } from "@/lib/search";
 import { all, get } from "@/lib/db";
 import { getProfileContext } from "@/lib/profile";
 import { requireUser } from "@/lib/auth";
+import { nextScheduledRun, scheduleForUser } from "@/lib/schedule";
 import { truncate } from "@/lib/text";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +65,8 @@ export default async function DashboardPage() {
   const verifiedFacts = context.evidence.filter((fact) => fact.verification_status === "verified").length;
   const factRatio = Math.round((verifiedFacts / Math.max(1, context.evidence.length)) * 100);
 
+  const schedulePrefs = scheduleForUser(user.id);
+  const nextRun = nextScheduledRun(schedulePrefs);
   const firstName = user.name.split(" ")[0];
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -76,6 +79,19 @@ export default async function DashboardPage() {
           lastRun?.finished_at
             ? `Last search ${new Date(lastRun.finished_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · ${lastRun.trigger} run · ${String(counts.sourcesAttempted ?? 0)} sources`
             : "Run your first search to pull today's vacancies."
+        }
+        meta={
+          <>
+            <span>
+              {nextRun
+                ? `Next scheduled search ${nextRun.label} (${schedulePrefs.timezone})`
+                : "Automation is paused — searches run only when you ask."}
+            </span>
+            <span className="text-line-strong">/</span>
+            <Link href="/settings#schedule" className="hover:text-ink hover:underline">
+              Schedule
+            </Link>
+          </>
         }
         actions={<SearchTrigger />}
       />

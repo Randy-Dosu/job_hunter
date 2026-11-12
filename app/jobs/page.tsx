@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SlidersHorizontal } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { JobCard } from "@/components/job-card";
+import { ManualJobForm } from "@/components/manual-job-form";
 import { SearchTrigger } from "@/components/search-trigger";
 import { Callout, EmptyState } from "@/components/ui";
 import { ensureBootstrapSearch, listMatches, type MatchView } from "@/lib/search";
@@ -93,12 +94,15 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                 </dd>
               </div>
             </dl>
-            <Link
-              href="/settings#market"
-              className="mt-2.5 inline-flex items-center gap-1 text-[11.5px] font-medium text-ink hover:underline"
-            >
-              <SlidersHorizontal size={11} /> Edit filters
-            </Link>
+            <div className="mt-2.5 flex flex-col items-start gap-2">
+              <Link href="/settings#market" className="inline-flex items-center gap-1 text-[11.5px] font-medium text-ink hover:underline">
+                <SlidersHorizontal size={11} /> Edit filters
+              </Link>
+            </div>
+          </div>
+
+          <div className="border-t border-line pt-4">
+            <ManualJobForm />
           </div>
 
           {prefs.roleTitles.length ? (

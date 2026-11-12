@@ -53,5 +53,7 @@ export type GenerationResult = {
     requirementsMissing: string[];
     generatedAt: string;
     warnings: string[];
+    /** Present when a resume variant shaped the emphasis (FR-038). */
+    variant?: string;
   };
 };

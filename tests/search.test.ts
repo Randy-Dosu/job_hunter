@@ -174,3 +174,44 @@ describe("search pipeline", () => {
     expect(second.duplicateRun).toBe(true);
   }, 40_000);
 });
+
+describe("source budgets", () => {
+  it("skips a source that has spent its hourly budget and says why", async () => {
+    const source = db.get<{ id: string; slug: string }>("SELECT id, slug FROM job_sources ORDER BY name LIMIT 1")!;
+    db.run(
+      "UPDATE job_sources SET rate_limit_config_json = ? WHERE id = ?",
+      JSON.stringify({ maxRequestsPerHour: 1 }),
+      source.id,
+    );
+    // Pretend the source was already fetched inside this hour.
+    search.recordSourceFetch(source.id, "ok");
+
+    const budget = search.sourceBudget(source.id);
+    expect(budget.allowed).toBe(false);
+    if (!budget.allowed) expect(budget.reason).toContain("hourly limit");
+
+    const result = await search.runSearch(USER, "manual");
+    expect(result.duplicateRun).toBe(false);
+    expect(result.counts!.sourcesSkipped).toBe(1);
+    const row = db.get<{ error_summary: string; counts_json: string }>(
+      "SELECT error_summary, counts_json FROM search_runs WHERE id = ?",
+      result.runId,
+    )!;
+    expect(row.error_summary).toContain("skipped");
+    expect(row.error_summary).toContain("hourly limit");
+    const sourceRow = db.get<{ last_status: string }>("SELECT last_status FROM job_sources WHERE id = ?", source.id)!;
+    expect(sourceRow.last_status).toBe("rate_limited");
+  });
+
+  it("lets a source fetch again once its window clears", () => {
+    // A source that no earlier run has fetched (the manual-import source).
+    const source = db.get<{ id: string; slug: string }>("SELECT id, slug FROM job_sources WHERE slug = 'manual'")!;
+    db.run(
+      "UPDATE job_sources SET rate_limit_config_json = ? WHERE id = ?",
+      JSON.stringify({ maxRequestsPerHour: 2 }),
+      source.id,
+    );
+    search.recordSourceFetch(source.id, "ok", new Date(Date.now() - 2 * 3_600_000));
+    expect(search.sourceBudget(source.id).allowed).toBe(true);
+  });
+});

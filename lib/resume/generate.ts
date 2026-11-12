@@ -26,6 +26,8 @@ export type GenerateInput = {
   profile: ProfileSnapshot;
   preferences: Preferences;
   baseResumeText?: string | null;
+  /** Optional variant emphasis (FR-038). Only re-weights existing evidence. */
+  variant?: { name: string; emphasis: string[] } | null;
 };
 
 function datesLabel(fact: EvidenceFact): string {
@@ -202,6 +204,7 @@ export async function generateTailoredResume(input: GenerateInput): Promise<Gene
     ...required.map((req) => req.skill),
     ...preferred.map((req) => req.skill),
     ...tokenSet(job.title),
+    ...(input.variant?.emphasis ?? []).flatMap((entry) => [...tokenSet(entry)]),
   ]);
 
   const log: ChangeLogEntry[] = [];
@@ -337,6 +340,16 @@ export async function generateTailoredResume(input: GenerateInput): Promise<Gene
     generatedAt: new Date().toISOString(),
   };
 
+  if (input.variant) {
+    log.push({
+      id: crypto.randomUUID(),
+      type: "reordered",
+      section: "Variant",
+      description: `Applied the “${input.variant.name}” variant, which emphasises ${input.variant.emphasis.length ? input.variant.emphasis.join(", ") : "this role family"}. Only verified facts were re-ordered.`,
+      evidenceIds: [],
+    });
+  }
+
   const result = finalize(content, log, facts, {
     engine: "evidence-grounded",
     provider,
@@ -345,6 +358,7 @@ export async function generateTailoredResume(input: GenerateInput): Promise<Gene
     requirementsMissing: missingRequired.map((req) => req.skill),
     generatedAt: new Date().toISOString(),
     warnings,
+    ...(input.variant ? { variant: input.variant.name } : {}),
   });
   void deterministicSummary;
   return result;

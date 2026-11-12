@@ -34,6 +34,11 @@ function migrate(db: DatabaseSync) {
       if (!existing.has(column.name)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column.ddl}`);
     }
   }
+  // Indexes that depend on migrated columns are created after the columns exist.
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_dedupe ON notifications(user_id, dedupe_key) WHERE dedupe_key IS NOT NULL",
+  );
+
   // The demo account owns source governance so the admin console is reachable offline.
   db.prepare("UPDATE users SET role = 'admin' WHERE email = ? AND role <> 'admin'").run("demo@jobhunter.app");
 

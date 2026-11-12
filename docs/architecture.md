@@ -36,7 +36,9 @@ SQLite (data/job-hunter.db)              sources/adapters.ts, sources/normalize.
 
 ## Data flow: one daily run
 
-1. `POST /api/search-runs` (or a cron call with `"trigger":"scheduled"`).
+1. An external cron calls `POST /api/cron/search` (bearer `CRON_SECRET`). The tick runs
+   every user whose local schedule window is open, re-checks vacancy liveness and sends
+   due alerts. `POST /api/search-runs` remains the manual, user-initiated path.
 2. Run key `${userId}:scheduled:${YYYY-MM-DD}` is inserted; a unique index makes a
    duplicate scheduled run a no-op (idempotency).
 3. Enabled adapters run in parallel (`Promise.all`), each with an 8s timeout.
@@ -120,7 +122,8 @@ a confirmed submission requires a reference from the employer.
 ## Scaling path
 
 - Swap `lib/db` for a Postgres-backed implementation (same SQL shape).
-- Move search runs to a queue/worker (per user + source) and a cron scheduler; the
+- Move search runs to a queue/worker (per user + source); the cron entry point already
+  exists, and the
   idempotent run key already prevents duplicate windows.
 - Add source adapters behind the existing `JobSourceAdapter` interface.
 - Keep approval, grounding and handoff logic unchanged — they are the product.

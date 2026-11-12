@@ -2,6 +2,7 @@ import { get, insert, nowIso, parseJson, uid } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { fail, json, withUser } from "@/lib/api";
 import { getProfileContext } from "@/lib/profile";
+import { resolveVariant } from "@/lib/resume/variants";
 import { generateTailoredResume } from "@/lib/resume/generate";
 import type { TailoredResumeContent } from "@/lib/resume/types";
 import { resumeToText } from "@/lib/resume/grounding";
@@ -39,6 +40,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       ...parseJson<{ label: string; url: string }[]>(context.profile.links_json, []).map((link) => link.url.replace(/^https?:\/\//, "")),
     ].filter(Boolean) as string[];
 
+    const variant = resolveVariant(user.id, job.title);
     const result = await generateTailoredResume({
       candidateName: userRow.name,
       contactLines,
@@ -46,6 +48,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       profile: context.snapshot,
       preferences: context.preferences,
       baseResumeText: context.baseResume?.content_text ?? null,
+      variant: variant ? { name: variant.name, emphasis: variant.emphasis } : null,
     });
 
     const resumeId = uid();
@@ -69,6 +72,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       provider: result.metadata.provider,
       unsupported: result.unsupported.length,
       evidenceUsed: result.metadata.evidenceUsed,
+      variant: variant?.name ?? null,
     });
 
     return json({

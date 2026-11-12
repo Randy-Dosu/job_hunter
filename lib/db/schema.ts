@@ -161,6 +161,14 @@ CREATE TABLE IF NOT EXISTS jobs (
   UNIQUE(source_id, external_id)
 );
 CREATE INDEX IF NOT EXISTS idx_jobs_fingerprint ON jobs(fingerprint);
+
+CREATE TABLE IF NOT EXISTS source_fetch_log (
+  id TEXT PRIMARY KEY,
+  source_id TEXT NOT NULL REFERENCES job_sources(id) ON DELETE CASCADE,
+  fetched_at TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ok'          -- ok | fixture_fallback | error | skipped
+);
+CREATE INDEX IF NOT EXISTS idx_fetch_log_source ON source_fetch_log(source_id, fetched_at DESC);
 CREATE INDEX IF NOT EXISTS idx_jobs_posted ON jobs(posted_at DESC);
 
 CREATE TABLE IF NOT EXISTS job_matches (
@@ -252,9 +260,6 @@ CREATE TABLE IF NOT EXISTS notifications (
   read_at TEXT,
   created_at TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_dedupe ON notifications(user_id, dedupe_key)
-  WHERE dedupe_key IS NOT NULL;
-
 CREATE TABLE IF NOT EXISTS resume_variants (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

@@ -166,7 +166,7 @@ function SourceRow({ source }: { source: AdminSource }) {
         {message ? <span className="text-[11px] text-moss-700">{message}</span> : null}
         {error ? <span className="text-[11px] text-clay-700">{error}</span> : null}
         <span className="ml-auto text-[10.5px] text-muted">
-          Disabling stops the next fetch for every user; existing listings are kept.
+          Disabling stops the next fetch for everyone; budgets are enforced per fetch and a source over budget is skipped with a reason.
         </span>
       </div>
     </article>

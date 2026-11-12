@@ -158,10 +158,12 @@ adds anything unsupported, the deterministic summary is kept instead.
   current SQLite adapter is not suitable as-is. Either point `lib/db` at a managed
   Postgres instance (the schema in `lib/db/schema.ts` maps 1:1) or run the API on a
   host with a volume and keep Vercel for the UI.
-- **Scheduling:** the scheduler is represented by `runSearch(..., 'scheduled')` with
-  an idempotent per-user/per-day run key. Call it from a cron job
-  (`POST /api/search-runs {"trigger":"scheduled"}`). Keep scheduled runs out of
-  short-lived serverless functions.
+- **Scheduling:** point any cron at `POST /api/cron/search` every 5–15 minutes with
+  `authorization: Bearer $CRON_SECRET`. One tick runs every due user (their own
+  timezone, days and search time decide), re-checks vacancy liveness and sends due
+  alerts. `runSearch` keeps it to one scheduled run per local day, so firing often is
+  safe. Without `CRON_SECRET` in production the endpoint returns 503 instead of
+  running unauthenticated.
 - Secrets belong in `.env` (never committed). `.env.example` documents every key.
 
 ---
@@ -188,6 +190,11 @@ adds anything unsupported, the deterministic summary is kept instead.
 | GET/POST | `/api/notifications` | Digest list / mark read |
 | GET | `/api/export` · POST `/api/account/delete` | Portability and erasure |
 | GET | `/api/sources` | Source catalogue with terms review |
+| POST | `/api/jobs/import` | Add a job by URL (one polite fetch, SSRF guard, daily cap) |
+| GET/POST | `/api/resume-variants` · DELETE `/api/resume-variants/[id]` | Role-family variants |
+| POST | `/api/application-packages/[id]/save` · `/reject` | Save for later / reject |
+| POST/GET | `/api/cron/search` | Scheduled runs, liveness sweep and alerts (cron) |
+| GET/PATCH | `/api/admin/sources` | Source governance (administrator only) |
 
 All endpoints resolve the caller from the session cookie and return 401 otherwise.
 
@@ -196,20 +203,66 @@ All endpoints resolve the caller from the session cookie and return 401 otherwis
 ## Tests
 
 ```
-tests/text.test.ts       URL canonicalisation, fingerprints, title similarity
-tests/scoring.test.ts    hard filters, missing-skill gaps, confidence, red flags
-tests/grounding.test.ts  fabrication, metrics, employers, learning skills, prompt injection
-tests/approval.test.ts   hash binding, revocation, stale approvals, idempotent submission
-tests/parse.test.ts      resume parsing (sections, dates, skills, warnings)
-tests/search.test.ts     ingestion, dedupe, scoring, idempotent scheduled runs
+tests/text.test.ts         URL canonicalisation, fingerprints, title similarity
+tests/scoring.test.ts      hard filters, missing-skill gaps, confidence, red flags
+tests/grounding.test.ts    fabrication, metrics, employers, learning skills, prompt injection
+tests/approval.test.ts     hash binding, revocation, stale approvals, save/reject, idempotent submission
+tests/parse.test.ts        resume parsing (sections, dates, skills, warnings)
+tests/search.test.ts       ingestion, dedupe, scoring, idempotent scheduled runs
+tests/schedule.test.ts     timezone windows, days, pause, next-run calculation
+tests/notifications.test.ts delivery, suppression, dedupe, deadline/reminder alerts, liveness
+tests/auth.test.ts         route-level 401/403 and cross-user isolation
+tests/ratelimit.test.ts    sliding window and auth endpoint throttling
+tests/manual-import.test.ts JobPosting parsing, SSRF guard, dedupe, daily cap
+tests/variants.test.ts     variant CRUD, resolution by role family, grounded re-ordering
+tests/migration.test.ts    legacy database upgrades in place, idempotently
 ```
 
-`npm test` → 45 passing.
+Source budgets configured in the admin console are enforced: every fetch is logged and a
+source that has spent its hourly or daily allowance is skipped for that run with the
+reason recorded on the search run.
+
+`npm test` → 100 passing.
+
+## Notifications, reminders and alerts
+
+Every notification is written in-app and, when a provider is configured and the user
+opted in, emailed through Resend (`RESEND_API_KEY`, `NOTIFY_FROM`). The stored row
+records `channel`, `delivery_status` (`stored` / `sent` / `suppressed` / `failed`) and
+the error, so "sent" is never claimed without a provider accepting it. Types: daily
+digest, closing-deadline alerts (72h window), listing-change alerts, follow-up
+reminders, and vacancy-closed/unverified warnings. All are deduplicated by key.
+
+## Administration
+
+Users carry a `role`; administrators get `/admin/sources` to enable or disable an
+adapter, set its hourly/daily request budget (enforced per fetch), record the terms review and inspect
+ingestion/parsing faults, negative match feedback and low-confidence matches. Every
+change is audited. The demo account is an administrator so the console is reachable
+offline.
+
+## Manual job links
+
+`POST /api/jobs/import {"url": "..."}` reads a single public page: schema.org
+`JobPosting` JSON-LD first, Open Graph/title metadata as a fallback with explicit
+warnings. One fetch, no retries, no login or CAPTCHA handling, 20 imports per user per
+day, and an SSRF guard that refuses localhost/private ranges, non-HTTP schemes and
+credentials in the URL.
+
+## Resume variants
+
+A variant is a named emphasis for a role family (for example "Frontend" with
+accessibility/design-system keywords). When a vacancy title matches the variant's role
+family it is applied automatically; only already-verified evidence is re-ordered or
+re-weighted, and the change log records that a variant was used.
 
 ## Known limits (intentional for this MVP)
 
 - Manual handoff is the only application route; there is no automated submission, by design.
-- Scheduling is exposed as an idempotent API call rather than an in-process cron.
-- Email delivery is represented by `notifyEmail`; in-app notifications are implemented.
+- No browser form-filling: unsupported destinations always hand control to the user.
+- Email requires a provider; without one the row is stored and marked suppressed.
+- The rate limiter is per process. Multi-instance deployments should enforce the same
+  limits at the edge or move the store to Redis.
 - No multi-language UI yet; English only.
-- SQLite is single-node. The schema is portable to Postgres when you need horizontal scale.
+- SQLite is single-node and cannot persist on Vercel's serverless filesystem. The schema
+  maps 1:1 to Postgres when you need a managed host.

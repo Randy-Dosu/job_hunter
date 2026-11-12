@@ -9,6 +9,7 @@ import { notify, runAlertSweep } from "@/lib/notify";
 
 export type SearchCounts = {
   sourcesAttempted: number;
+  sourcesSkipped?: number;
   sourcesFailed: number;
   discovered: number;
   duplicates: number;
@@ -65,6 +66,55 @@ function enabledSourceSlugs(userId: string): string[] {
     ? all<{ slug: string }>("SELECT slug FROM job_sources WHERE enabled = 1 AND id IN (" + ids.map(() => "?").join(",") + ")", ...ids)
     : all<{ slug: string; }>("SELECT slug FROM job_sources WHERE enabled = 1");
   return rows.map((row) => row.slug);
+}
+
+/**
+ * Source budgets set in the admin console are enforced here, not just displayed.
+ * Every attempt is logged, so hour/day windows are real counts and a source that
+ * is over budget is skipped with a visible reason instead of being hammered.
+ */
+export function sourceBudget(sourceId: string, now: Date = new Date()):
+  | { allowed: true; config: { maxRequestsPerHour?: number; maxRequestsPerDay?: number; timeoutMs?: number } }
+  | { allowed: false; reason: string } {
+  const row = get<{ rate_limit_config_json: string }>("SELECT rate_limit_config_json FROM job_sources WHERE id = ?", sourceId);
+  let config: { maxRequestsPerHour?: number; maxRequestsPerDay?: number; timeoutMs?: number } = {};
+  try {
+    config = JSON.parse(row?.rate_limit_config_json ?? "{}") as typeof config;
+  } catch {
+    config = {};
+  }
+  const hourAgo = new Date(now.getTime() - 3_600_000).toISOString();
+  const dayAgo = new Date(now.getTime() - 86_400_000).toISOString();
+  if (config.maxRequestsPerHour) {
+    const used = get<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM source_fetch_log WHERE source_id = ? AND fetched_at > ?",
+      sourceId,
+      hourAgo,
+    );
+    if ((used?.count ?? 0) >= config.maxRequestsPerHour) {
+      return { allowed: false, reason: `hourly limit of ${config.maxRequestsPerHour} reached` };
+    }
+  }
+  if (config.maxRequestsPerDay) {
+    const used = get<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM source_fetch_log WHERE source_id = ? AND fetched_at > ?",
+      sourceId,
+      dayAgo,
+    );
+    if ((used?.count ?? 0) >= config.maxRequestsPerDay) {
+      return { allowed: false, reason: `daily limit of ${config.maxRequestsPerDay} reached` };
+    }
+  }
+  return { allowed: true, config };
+}
+
+export function recordSourceFetch(sourceId: string, status: string, at: Date = new Date()) {
+  insert("source_fetch_log", {
+    id: uid(),
+    source_id: sourceId,
+    fetched_at: at.toISOString(),
+    status,
+  });
 }
 
 function upsertJob(
@@ -336,10 +386,25 @@ export async function runSearch(userId: string, trigger: "manual" | "scheduled" 
   const sourceRows = all<{ id: string; slug: string }>("SELECT id, slug FROM job_sources");
   const sourceBySlug = new Map(sourceRows.map((row) => [row.slug, row.id]));
 
+  const eligible: typeof adapters = [];
+  for (const adapter of adapters.filter((entry) => slugList.includes(entry.slug))) {
+    const sourceId = sourceBySlug.get(adapter.slug);
+    if (!sourceId) continue;
+    const budget = sourceBudget(sourceId, new Date(startedAt));
+    if (!budget.allowed) {
+      counts.sourcesSkipped = (counts.sourcesSkipped ?? 0) + 1;
+      counts.sourcesAttempted = Math.max(0, counts.sourcesAttempted - 1);
+      errors.push(`${adapter.name}: skipped — ${budget.reason}`);
+      recordSourceFetch(sourceId, "skipped", new Date(startedAt));
+      run("UPDATE job_sources SET last_status = ? WHERE id = ?", "rate_limited", sourceId);
+      continue;
+    }
+    eligible.push(adapter);
+  }
+  counts.sourcesAttempted = eligible.length;
+
   const results = await Promise.all(
-    adapters
-      .filter((adapter) => slugList.includes(adapter.slug))
-      .map(async (adapter) => ({ adapter, outcome: await adapter.search(criteria) })),
+    eligible.map(async (adapter) => ({ adapter, outcome: await adapter.search(criteria) })),
   );
 
   const seenIds = new Set<string>();
@@ -358,12 +423,9 @@ export async function runSearch(userId: string, trigger: "manual" | "scheduled" 
       seenIds.add(id);
       if (changed) changedJobs.push({ id, title: job.title, company: job.company });
     }
-    run(
-      "UPDATE job_sources SET last_run_at = ?, last_status = ? WHERE id = ?",
-      nowIso(),
-      outcome.error ? (outcome.usedFixture ? "fixture_fallback" : "error") : "ok",
-      sourceId,
-    );
+    const statusLabel = outcome.error ? (outcome.usedFixture ? "fixture_fallback" : "error") : "ok";
+    run("UPDATE job_sources SET last_run_at = ?, last_status = ? WHERE id = ?", nowIso(), statusLabel, sourceId);
+    recordSourceFetch(sourceId, statusLabel);
   }
 
   const scores = rescanMatches(userId);
