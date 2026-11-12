@@ -32,9 +32,9 @@ export default async function SettingsPage() {
   return (
     <AppShell>
       <PageHeader
-        eyebrow="Control"
-        title="Settings & privacy"
-        description="Sources, schedule, automation level and data controls. Everything here is reversible except account deletion."
+        title="Settings"
+        description="Search market, sources, schedule and data controls. Everything here is reversible except account deletion."
+        meta={<span>Signed in as {user.email}</span>}
         actions={<SearchTrigger label="Run a search" variant="secondary" />}
       />
 
@@ -85,58 +85,71 @@ export default async function SettingsPage() {
           />
         </div>
 
-        <div className="space-y-5">
-          <section className="card card-pad">
-            <h2 className="text-sm font-semibold text-slate-900">Audit trail</h2>
-            <p className="mt-0.5 text-[11px] text-slate-500">Every search, generation, approval and submission attempt is recorded.</p>
-            <ol className="mt-2.5 space-y-2">
+        <aside className="min-w-0 space-y-4">
+          <section className="rounded-[10px] border border-line bg-surface">
+            <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+              <h2 className="text-[13px] font-semibold text-ink">Audit trail</h2>
+              <span className="text-[10.5px] text-muted">last {auditEvents.length}</span>
+            </div>
+            <ol className="max-h-[420px] divide-y divide-line overflow-auto">
               {auditEvents.map((event) => (
-                <li key={event.id} className="border-l-2 border-slate-200 pl-2.5">
-                  <p className="text-[11px] font-medium capitalize text-slate-700">
+                <li key={event.id} className="px-4 py-2">
+                  <p className="text-[11.5px] font-medium capitalize text-ink-soft">
                     {event.action.replaceAll(".", " · ").replaceAll("_", " ")}
                   </p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] tabular-nums text-muted">
                     {event.actor} · {new Date(event.created_at).toLocaleString("en-GB")}
                   </p>
                 </li>
               ))}
-              {!auditEvents.length ? <li className="text-[11px] text-slate-500">No activity yet.</li> : null}
+              {!auditEvents.length ? <li className="px-4 py-3 text-[11.5px] text-muted">No activity yet.</li> : null}
             </ol>
+            <p className="border-t border-line px-4 py-2 text-[10.5px] leading-relaxed text-muted">
+              Every search, generation, approval and submission attempt is recorded with who did it.
+            </p>
           </section>
 
-          <section className="card card-pad">
-            <h2 className="text-sm font-semibold text-slate-900">Data handling</h2>
-            <ul className="mt-2 space-y-2 text-[11px] leading-relaxed text-slate-600">
-              <li>
-                <span className="font-semibold text-slate-800">Storage:</span> SQLite on the server, one row per user with ownership
-                checks on every read.
-              </li>
-              <li>
-                <span className="font-semibold text-slate-800">LLM:</span>{" "}
-                {process.env.LLM_API_KEY ? "a provider is configured for summary rewrites only; validated afterwards." : "no provider is configured, so nothing leaves the server for generation."}
-              </li>
-              <li>
-                <span className="font-semibold text-slate-800">Sources:</span> only the adapters you enable, fetched server-side with
-                timeouts and bounded retries.
-              </li>
-              <li>
-                <span className="font-semibold text-slate-800">Retention:</span> your data stays until you delete it; exports include the
-                full audit history.
-              </li>
-            </ul>
+          <section className="rounded-[10px] border border-line bg-surface p-4">
+            <h2 className="text-[13px] font-semibold text-ink">Data handling</h2>
+            <dl className="mt-2 space-y-2 text-[11.5px] leading-relaxed">
+              <div>
+                <dt className="font-medium text-ink">Storage</dt>
+                <dd className="text-muted">SQLite on the server, one row per user with ownership checks on every read.</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-ink">Generation</dt>
+                <dd className="text-muted">
+                  {process.env.LLM_API_KEY
+                    ? "A provider is configured for summary rewrites only; output is validated afterwards."
+                    : "No provider configured, so nothing leaves the server for generation."}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-medium text-ink">Sources</dt>
+                <dd className="text-muted">Only the adapters you enable, fetched server-side with timeouts and bounded retries.</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-ink">Retention</dt>
+                <dd className="text-muted">Your data stays until you delete it; exports include the full audit history.</dd>
+              </div>
+            </dl>
           </section>
 
-          <section className="card card-pad">
-            <h2 className="text-sm font-semibold text-slate-900">Account</h2>
-            <p className="mt-1 text-xs text-slate-600">{user.name}</p>
-            <p className="text-[11px] text-slate-500">{user.email}</p>
-            <form action="/api/auth/logout" method="post" className="mt-3">
-              <button type="submit" className="btn-secondary btn-sm">
-                Sign out
-              </button>
-            </form>
+          <section id="notifications" className="rounded-[10px] border border-line bg-surface p-4">
+            <h2 className="text-[13px] font-semibold text-ink">Account</h2>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-[12.5px] font-medium text-ink">{user.name}</p>
+                <p className="truncate text-[11px] text-muted">{user.email}</p>
+              </div>
+              <form action="/api/auth/logout" method="post">
+                <button type="submit" className="btn-secondary btn-sm">
+                  Sign out
+                </button>
+              </form>
+            </div>
           </section>
-        </div>
+        </aside>
       </div>
     </AppShell>
   );

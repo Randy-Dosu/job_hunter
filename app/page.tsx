@@ -1,227 +1,257 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  ArrowRight,
-  BadgeCheck,
-  ClipboardCheck,
-  FileSearch,
-  Fingerprint,
-  Gauge,
-  Lock,
-  Mail,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  TriangleAlert,
-} from "lucide-react";
+import { Search, ArrowRight, MapPin } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
+import { all } from "@/lib/db";
+import { fixturePreview } from "@/lib/sources/adapters";
 import { DemoLoginButton } from "@/components/auth-forms";
+import { CompanyMark } from "@/components/ui";
+import { formatRelative } from "@/lib/text";
 
-const steps = [
-  {
-    icon: ClipboardCheck,
-    title: "1 · Define your market",
-    body: "Countries, remote regions, role families, seniority, salary floor, exclusions and the sources you allow.",
-  },
-  {
-    icon: Search,
-    title: "2 · Daily discovery",
-    body: "Compliant sources are searched on your schedule, then normalized, de-duplicated and freshness-checked.",
-  },
-  {
-    icon: Gauge,
-    title: "3 · Explainable ranking",
-    body: "A transparent 100-point model shows what matched, what did not, and how confident the data is.",
-  },
-  {
-    icon: Fingerprint,
-    title: "4 · Grounded resumes",
-    body: "Every line is traceable to a verified profile fact. You see a change log before anything is exported.",
-  },
+type PreviewJob = {
+  id?: string;
+  title: string;
+  company: string;
+  location: string;
+  salary: string | null;
+  remotePolicy: string;
+  employmentType: string;
+  postedAt: string | null;
+  source: string;
+};
+
+const POPULAR = ["Frontend Developer", "React Developer", "Data Analyst", "Customer Support", "Product Designer"];
+
+const STEPS = [
+  { title: "Set your market", body: "Countries, remote regions, titles, seniority, salary floor and the employers you never want to see." },
+  { title: "Get a daily list", body: "We search the sources you approved, remove duplicates, drop closed roles and explain every score." },
+  { title: "Tailor, then decide", body: "A resume built from verified facts only. You approve the exact package before anything is sent." },
 ];
 
-const guardrails = [
-  { icon: ShieldCheck, title: "No approval, no application", body: "Approval is bound to one vacancy and one exact package hash. Edit anything and approval expires." },
-  { icon: Fingerprint, title: "No invented claims", body: "The generator can only reorder and rephrase verified facts. Unsupported sentences are blocked and flagged." },
-  { icon: Lock, title: "Your data stays yours", body: "Strict per-user ownership, server-side secrets, export and deletion controls, and a full audit trail." },
-  { icon: FileSearch, title: "Sources you can audit", body: "Each adapter documents its access method, terms review, rate limits and last run status." },
-];
-
-export default async function WelcomePage() {
+export default async function HomePage() {
   const user = await getSessionUser();
   if (user) redirect("/dashboard");
 
+  const stored = all<{
+    id: string;
+    title: string;
+    company: string;
+    location: string;
+    remote_policy: string;
+    salary: string | null;
+    employment_type: string;
+    posted_at: string | null;
+    source_name: string;
+  }>(
+    `SELECT j.id, j.title, j.company, j.location, j.remote_policy, j.salary, j.employment_type, j.posted_at, s.name AS source_name
+     FROM jobs j JOIN job_sources s ON s.id = j.source_id
+     WHERE j.status = 'open' ORDER BY j.posted_at DESC LIMIT 5`,
+  );
+
+  const preview: PreviewJob[] = stored.length
+    ? stored.map((job) => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        salary: job.salary,
+        remotePolicy: job.remote_policy,
+        employmentType: job.employment_type,
+        postedAt: job.posted_at,
+        source: job.source_name,
+      }))
+    : fixturePreview(5).map((job) => ({
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        salary: job.salary,
+        remotePolicy: job.remotePolicy,
+        employmentType: job.employmentType,
+        postedAt: job.postedAt,
+        source: job.sourceSlug === "remoteok" ? "Remote OK" : job.sourceSlug === "remotive" ? "Remotive" : "Arbeitnow",
+      }));
+
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-20 pt-6 sm:px-8">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
-            <Sparkles size={17} />
-          </span>
-          <span>
-            <span className="block text-sm font-semibold tracking-tight text-slate-900">Job Hunter</span>
-            <span className="block text-[11px] text-slate-500">careful by design</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/login" className="btn-ghost text-sm">
-            Sign in
-          </Link>
-          <Link href="/login?mode=signup" className="btn-primary text-sm">
-            Get started
-          </Link>
+    <div className="min-h-screen">
+      <header className="border-b border-line bg-canvas">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4 sm:px-6">
+          <div className="flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-[6px] bg-ink text-[10px] font-bold text-white">jh</span>
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink">job hunter</span>
+          </div>
+          <nav className="hidden items-center gap-6 text-[13px] text-ink-soft sm:flex">
+            <a href="#how" className="hover:text-ink">
+              How it works
+            </a>
+            <a href="#jobs" className="hover:text-ink">
+              Recent roles
+            </a>
+            <a href="#sources" className="hover:text-ink">
+              Sources
+            </a>
+          </nav>
+          <div className="ml-auto flex items-center gap-2">
+            <Link href="/login" className="btn-ghost">
+              Sign in
+            </Link>
+            <Link href="/login?mode=signup" className="btn-primary">
+              Create account
+            </Link>
+          </div>
         </div>
       </header>
 
-      <section className="mt-14 grid items-center gap-10 lg:mt-20 lg:grid-cols-[1.05fr_0.95fr]">
-        <div>
-          <span className="badge-brand">
-            <BadgeCheck size={12} /> User-controlled, evidence-first
-          </span>
-          <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl">
-            A job-search assistant that never
-            <span className="bg-gradient-to-r from-brand-600 to-emerald-600 bg-clip-text text-transparent"> applies behind your back</span>.
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600">
-            Job Hunter searches your chosen markets every day, explains why each vacancy is relevant, drafts a resume from
-            verified facts only, and waits for your explicit approval before anything leaves the app.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link href="/login" className="btn-primary px-4 py-2.5">
-              Start your search <ArrowRight size={15} />
-            </Link>
-            <div className="w-[15rem]">
-              <DemoLoginButton className="btn-secondary w-full px-4 py-2.5" label="See the demo workspace" />
-            </div>
+      <section className="border-b border-line bg-surface">
+        <div className="mx-auto max-w-6xl px-4 pb-9 pt-12 sm:px-6 lg:pt-16">
+          <div className="max-w-2xl">
+            <h1 className="text-[34px] font-semibold leading-[1.1] tracking-[-0.035em] text-ink sm:text-[42px]">
+              The job search that shows its working.
+            </h1>
+            <p className="mt-3 max-w-xl text-[14.5px] leading-relaxed text-ink-soft">
+              Remote roles from public job boards, scored against the experience you can prove. Every recommendation shows what
+              matched and what did not — and nothing is sent without your approval.
+            </p>
           </div>
-          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-slate-500">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck size={13} className="text-emerald-600" /> Approval gate on every submission
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Fingerprint size={13} className="text-emerald-600" /> Evidence linked to every claim
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <TriangleAlert size={13} className="text-amber-500" /> Scam and red-flag warnings
-            </span>
-          </div>
-        </div>
 
-        <div className="relative">
-          <div className="absolute -inset-4 -z-10 rounded-[28px] bg-gradient-to-br from-brand-100/70 via-white to-emerald-100/50 blur-2xl" />
-          <div className="card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-              <p className="text-xs font-semibold text-slate-700">Today&apos;s digest</p>
-              <span className="badge-neutral">illustrative</span>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {[
-                { title: "Junior Frontend Developer", company: "Brightline Studio", score: 82, verdict: "Strong match", tone: "badge-strong" },
-                { title: "Full Stack Developer", company: "Northwind Labs", score: 74, verdict: "Strong match", tone: "badge-strong" },
-                { title: "React Developer", company: "Studio Mono", score: 68, verdict: "Possible", tone: "badge-possible" },
-              ].map((job) => (
-                <div key={job.title} className="flex items-center gap-3 px-5 py-3">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-xs font-semibold text-slate-600">
-                    {job.company.slice(0, 1)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-900">{job.title}</p>
-                    <p className="truncate text-[11px] text-slate-500">
-                      {job.company} · remote worldwide
-                    </p>
-                  </div>
-                  <span className={job.tone}>{job.score}</span>
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 bg-slate-50/60 text-center">
-              {[
-                { value: "18", label: "found" },
-                { value: "7", label: "duplicates" },
-                { value: "5", label: "relevant" },
-              ].map((stat) => (
-                <div key={stat.label} className="px-3 py-3">
-                  <p className="text-sm font-semibold text-slate-900">{stat.value}</p>
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="absolute -bottom-6 -left-4 hidden w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg sm:block">
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
-              <BadgeCheck size={12} /> Approval required
-            </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-              “Submit application” stays disabled until you review this exact package and confirm.
-            </p>
+          <form action="/login" className="mt-7 flex max-w-3xl flex-col gap-2 rounded-md border border-line-strong bg-surface p-2 shadow-[0_1px_2px_rgba(20,23,31,0.04)] sm:flex-row">
+            <label className="flex flex-1 items-center gap-2 rounded-md px-2.5 py-1.5 focus-within:bg-[#fbfaf8]">
+              <Search size={15} className="text-muted" />
+              <span className="sr-only">Job title, keyword or company</span>
+              <input
+                name="q"
+                placeholder="Job title, keyword or company"
+                className="h-7 w-full bg-transparent text-[13.5px] text-ink outline-none placeholder:text-[#9aa0a8]"
+              />
+            </label>
+            <span className="hidden w-px self-stretch bg-line sm:block" />
+            <label className="flex items-center gap-2 rounded-md px-2.5 py-1.5 focus-within:bg-[#fbfaf8] sm:w-[240px]">
+              <MapPin size={15} className="text-muted" />
+              <span className="sr-only">Location or remote region</span>
+              <input
+                name="l"
+                placeholder="Location or remote region"
+                className="h-7 w-full bg-transparent text-[13.5px] text-ink outline-none placeholder:text-[#9aa0a8]"
+              />
+            </label>
+            <button type="submit" className="btn-primary h-9 shrink-0 px-4">
+              Search jobs
+            </button>
+          </form>
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-muted">
+            <span>Popular:</span>
+            {POPULAR.map((term) => (
+              <Link key={term} href={`/login?q=${encodeURIComponent(term)}`} className="text-ink-soft underline decoration-line-strong underline-offset-2 hover:text-ink">
+                {term}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="mt-24">
-        <h2 className="text-lg font-semibold tracking-tight text-slate-900">How a day works</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step) => (
-            <div key={step.title} className="card card-pad">
-              <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-600">
-                <step.icon size={17} />
-              </span>
-              <h3 className="mt-3 text-sm font-semibold text-slate-900">{step.title}</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{step.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)] lg:py-12">
+        <div id="jobs">
+          <div className="mb-2 flex items-baseline justify-between">
+            <h2 className="text-[15px] font-semibold text-ink">Recently discovered roles</h2>
+            <span className="text-[11.5px] text-muted">{stored.length ? "From your sources" : "Sample listings from the approved sources"}</span>
+          </div>
 
-      <section className="mt-16 rounded-3xl border border-slate-200 bg-white/70 p-6 sm:p-9">
-        <h2 className="text-lg font-semibold tracking-tight text-slate-900">Built around four guardrails</h2>
-        <div className="mt-5 grid gap-6 sm:grid-cols-2">
-          {guardrails.map((item) => (
-            <div key={item.title} className="flex gap-3">
-              <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900/5 text-slate-700">
-                <item.icon size={15} />
-              </span>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-0.5 text-[13px] leading-relaxed text-slate-500">{item.body}</p>
+          <div className="overflow-hidden rounded-[10px] border border-line bg-surface">
+            {preview.map((job) => (
+              <div key={`${job.company}-${job.title}`} className="flex items-start gap-3.5 border-b border-line p-4 last:border-b-0 hover:bg-[#fcfbf9]">
+                <CompanyMark name={job.company} size={38} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="truncate text-[14px] font-semibold text-ink">{job.title}</p>
+                    {job.salary ? <p className="shrink-0 text-[12.5px] font-semibold text-moss-700">{job.salary}</p> : null}
+                  </div>
+                  <p className="mt-0.5 truncate text-[12.5px] text-ink-soft">
+                    {job.company}
+                    <span className="text-muted"> · {job.location}</span>
+                  </p>
+                  <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[11.5px] text-muted">
+                    <span className="capitalize">{job.remotePolicy === "remote" ? "Remote" : job.remotePolicy}</span>
+                    <span>·</span>
+                    <span className="capitalize">{job.employmentType}</span>
+                    <span>·</span>
+                    <span>Posted {formatRelative(job.postedAt)}</span>
+                    <span>·</span>
+                    <span>{job.source}</span>
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-16 grid gap-4 rounded-3xl bg-slate-900 p-7 text-white sm:p-9 lg:grid-cols-[1.3fr_0.7fr]">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">What it deliberately does not do</h2>
-          <ul className="mt-3 grid gap-2 text-sm text-slate-300 sm:grid-cols-2">
-            <li>· Apply to jobs without your per-vacancy approval</li>
-            <li>· Invent experience, metrics or certifications</li>
-            <li>· Bypass CAPTCHAs, logins or anti-bot controls</li>
-            <li>· Scrape sources whose terms forbid automation</li>
-            <li>· Contact recruiters on your behalf</li>
-            <li>· Guess values it cannot verify — unknowns stay unknown</li>
-          </ul>
-        </div>
-        <div className="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-          <p className="flex items-center gap-2 text-xs font-semibold text-slate-200">
-            <Mail size={13} /> Daily digest at 07:00, Africa/Accra
-          </p>
-          <p className="mt-2 text-[12px] leading-relaxed text-slate-400">
-            In-app by default. Email digests are opt-in, and every message only covers new or materially changed matches.
-          </p>
-          <div className="mt-3">
-            <DemoLoginButton className="btn bg-white px-3 py-2 text-xs font-semibold text-slate-900 hover:bg-slate-100" label="Open the demo" />
+            ))}
           </div>
+
+          <p className="mt-3 text-[11.5px] leading-relaxed text-muted">
+            {stored.length
+              ? "These are real normalized listings from the enabled sources, shown before sign-in without any personal data."
+              : "The store is empty in this environment, so these are the saved source fixtures. Sign in and run a search to ingest live listings."}
+          </p>
+        </div>
+
+        <aside className="space-y-6">
+          <div id="how" className="rounded-[10px] border border-line bg-surface p-5">
+            <h2 className="text-[13px] font-semibold text-ink">How it works</h2>
+            <ol className="mt-3 space-y-3.5">
+              {STEPS.map((step, index) => (
+                <li key={step.title} className="flex gap-3">
+                  <span className="number mt-[1px] grid h-5 w-5 shrink-0 place-items-center rounded-full border border-line-strong text-[10.5px] font-semibold text-ink-soft">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="text-[12.5px] font-semibold text-ink">{step.title}</p>
+                    <p className="mt-0.5 text-[12px] leading-relaxed text-muted">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="rounded-[10px] border border-line bg-[#fbfaf8] p-5">
+            <h2 className="text-[13px] font-semibold text-ink">Look around the demo</h2>
+            <p className="mt-1 text-[12px] leading-relaxed text-muted">
+              A seeded early-career profile, three reviewed sources and a package waiting in the approval centre.
+            </p>
+            <div className="mt-3">
+              <DemoLoginButton className="btn-primary w-full" label="Open the demo account" />
+            </div>
+            <p className="mt-2 text-[11px] text-muted">
+              demo@jobhunter.app · hunter1234
+            </p>
+          </div>
+
+          <div className="rounded-[10px] border border-line px-5 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Boundaries</p>
+            <ul className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-ink-soft">
+              <li>No application without your per-vacancy approval.</li>
+              <li>No invented experience, metrics or certificates.</li>
+              <li>No CAPTCHA, login or rate-limit bypassing.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+
+      <section id="sources" className="border-t border-line bg-surface">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-6 text-[12px] text-muted sm:px-6">
+          <p>
+            Searching <span className="font-medium text-ink">Remotive</span> · <span className="font-medium text-ink">Arbeitnow</span> ·{" "}
+            <span className="font-medium text-ink">Remote OK</span> — public APIs and feeds, terms reviewed.
+          </p>
+          <Link href="/login" className="inline-flex items-center gap-1 font-medium text-ink hover:underline">
+            Start with your profile <ArrowRight size={12} />
+          </Link>
         </div>
       </section>
 
-      <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500">
-        <span>© {new Date().getFullYear()} Job Hunter · MVP build from the product requirements document</span>
-        <span className="flex gap-3">
-          <Link href="/login" className="hover:underline">
+      <footer className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-[11.5px] text-muted sm:px-6">
+        <span>© {new Date().getFullYear()} Job Hunter — a user-controlled job-search assistant.</span>
+        <span className="flex gap-4">
+          <Link href="/login" className="hover:text-ink">
             Sign in
           </Link>
-          <span>Source policy · Privacy · Audit log</span>
+          <span>Source policy</span>
+          <span>Privacy</span>
         </span>
       </footer>
     </div>

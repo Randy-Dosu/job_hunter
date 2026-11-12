@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, ExternalLink, Loader2, Save } from "lucide-react";
+import { CompanyMark } from "@/components/ui";
 
 const STATUSES = [
   "preparing",
@@ -18,15 +19,15 @@ const STATUSES = [
 ];
 
 const STATUS_STYLES: Record<string, string> = {
-  preparing: "badge-neutral",
-  approved: "badge-brand",
-  awaiting_manual_completion: "badge-possible",
-  submitted: "badge-strong",
-  interview: "badge-brand",
-  offer: "badge-strong",
-  rejected: "badge-low",
-  withdrawn: "badge-neutral",
-  closed: "badge-neutral",
+  preparing: "chip",
+  approved: "chip-moss",
+  awaiting_manual_completion: "chip-warn",
+  submitted: "chip-moss",
+  interview: "chip-moss",
+  offer: "chip-moss",
+  rejected: "chip-clay",
+  withdrawn: "chip",
+  closed: "chip",
 };
 
 export function ApplicationRow({
@@ -91,39 +92,40 @@ export function ApplicationRow({
   };
 
   return (
-    <article className="card">
-      <div className="flex flex-wrap items-start justify-between gap-3 p-4">
-        <div className="min-w-0">
-          <Link href={`/jobs/${jobId}`} className="text-sm font-semibold text-slate-900 hover:text-brand-700">
+    <article className="border-b border-line last:border-0">
+      <div className="flex flex-wrap items-start gap-3 px-4 py-3 transition hover:bg-[#fbfaf8]">
+        <CompanyMark name={company} size={34} />
+        <div className="min-w-0 flex-1">
+          <Link href={`/jobs/${jobId}`} className="text-[13.5px] font-medium text-ink hover:underline">
             {title}
           </Link>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-[11.5px] text-muted">
             {company} · {location}
           </p>
-          <p className="mt-1 text-[10px] text-slate-400">
+          <p className="mt-0.5 text-[10.5px] text-muted">
             Updated {new Date(lastUpdatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
             {submittedAt ? ` · submitted ${new Date(submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : ""}
             {confirmationReference ? ` · ref ${confirmationReference}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={STATUS_STYLES[status] ?? "badge-neutral"}>{status.replaceAll("_", " ")}</span>
-          <button type="button" className="btn-ghost btn-sm" onClick={() => setOpen((current) => !current)} aria-expanded={open}>
+          <span className={`${STATUS_STYLES[status] ?? "chip"} capitalize`}>{status.replaceAll("_", " ")}</span>
+          <button type="button" className="btn-ghost btn-sm -mr-1.5" onClick={() => setOpen((current) => !current)} aria-expanded={open}>
             <ChevronDown size={13} className={`transition ${open ? "rotate-180" : ""}`} /> Manage
           </button>
         </div>
       </div>
 
       {open ? (
-        <div className="border-t border-slate-100 p-4">
+        <div className="border-t border-line bg-[#fbfaf8] px-4 py-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="label" htmlFor={`status-${id}`}>
+              <label className="field-label" htmlFor={`status-${id}`}>
                 Status
               </label>
               <select
                 id={`status-${id}`}
-                className="input text-xs"
+                className="field"
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
                 disabled={initialStatus === "submitted" && status === "submitted"}
@@ -135,16 +137,16 @@ export function ApplicationRow({
                 ))}
               </select>
               {status === "submitted" ? (
-                <p className="mt-1 text-[10px] text-amber-700">Record confirmations from the approval centre, not here.</p>
+                <p className="field-hint text-[#8a5a06]">Record confirmations from the approval centre, not here.</p>
               ) : null}
             </div>
             <div>
-              <label className="label" htmlFor={`next-${id}`}>
+              <label className="field-label" htmlFor={`next-${id}`}>
                 Next action
               </label>
               <input
                 id={`next-${id}`}
-                className="input text-xs"
+                className="field"
                 value={nextAction}
                 onChange={(event) => setNextAction(event.target.value)}
                 placeholder="Follow up on 20 Nov"
@@ -152,12 +154,12 @@ export function ApplicationRow({
             </div>
           </div>
           <div className="mt-3">
-            <label className="label" htmlFor={`notes-${id}`}>
+            <label className="field-label" htmlFor={`notes-${id}`}>
               Notes
             </label>
             <textarea
               id={`notes-${id}`}
-              className="input min-h-16 text-xs"
+              className="field min-h-16"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               placeholder="Recruiter name, interview details, anything you want to remember."
@@ -175,8 +177,8 @@ export function ApplicationRow({
             <a href={sourceUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn-ghost btn-sm">
               <ExternalLink size={12} /> Original listing
             </a>
-            {saved ? <span className="text-[11px] text-emerald-700">Saved</span> : null}
-            {error ? <span className="text-[11px] text-rose-600">{error}</span> : null}
+            {saved ? <span className="text-[11px] text-moss-700">Saved</span> : null}
+            {error ? <span className="text-[11px] text-clay-700">{error}</span> : null}
           </div>
         </div>
       ) : null}

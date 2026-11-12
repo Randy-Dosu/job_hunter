@@ -29,12 +29,12 @@ type Metadata = {
 };
 
 const LOG_STYLES: Record<string, string> = {
-  reordered: "badge-neutral",
-  emphasized: "badge-brand",
-  omitted: "badge-low",
-  rewritten: "badge-possible",
-  added: "badge-brand",
-  unchanged: "badge-neutral",
+  reordered: "chip",
+  emphasized: "chip-moss",
+  omitted: "chip",
+  rewritten: "chip-warn",
+  added: "chip-moss",
+  unchanged: "chip",
 };
 
 export function ResumeWorkspace({
@@ -151,10 +151,10 @@ export function ResumeWorkspace({
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
       <div className="space-y-4">
         <div className="card overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/60 px-4 py-2.5">
-            <div className="flex items-center gap-2 text-xs text-slate-600">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-[#fbfaf8] px-4 py-2.5">
+            <div className="flex items-center gap-2 text-xs text-ink-soft">
               <FileText size={13} /> Preview · tailored for{" "}
-              <span className="font-semibold text-slate-800">
+              <span className="font-semibold text-ink">
                 {job.title} · {job.company}
               </span>
             </div>
@@ -172,27 +172,27 @@ export function ResumeWorkspace({
           </div>
 
           <div className="px-5 py-6 sm:px-8">
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{content.header.name}</h2>
-            <p className="mt-1 text-[11px] text-slate-500">{content.header.contactLines.join("  ·  ")}</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-ink">{content.header.name}</h2>
+            <p className="mt-1 text-[11px] text-muted">{content.header.contactLines.join("  ·  ")}</p>
 
             <div className="mt-4">
               {editing ? (
-                <input className="input text-sm" value={headlineDraft} onChange={(event) => setHeadlineDraft(event.target.value)} />
+                <input className="field text-sm" value={headlineDraft} onChange={(event) => setHeadlineDraft(event.target.value)} />
               ) : (
-                <p className="text-sm font-medium text-brand-700">{content.headline.text}</p>
+                <p className="text-sm font-medium text-ink">{content.headline.text}</p>
               )}
             </div>
 
             <div className="mt-4">
-              <h3 className="border-b border-slate-200 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Summary</h3>
+              <h3 className="border-b border-line pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Summary</h3>
               {editing ? (
                 <textarea
-                  className="input mt-2 min-h-28 text-sm"
+                  className="field mt-2 min-h-28 text-sm"
                   value={summaryDraft}
                   onChange={(event) => setSummaryDraft(event.target.value)}
                 />
               ) : (
-                <p className="mt-2 text-[13px] leading-relaxed text-slate-700">{content.summary.text}</p>
+                <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">{content.summary.text}</p>
               )}
             </div>
 
@@ -200,20 +200,20 @@ export function ResumeWorkspace({
               .filter((section) => section.entries.length)
               .map((section) => (
                 <div key={section.heading} className="mt-4">
-                  <h3 className="border-b border-slate-200 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  <h3 className="border-b border-line pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
                     {section.heading}
                   </h3>
                   <div className="mt-2 space-y-3">
                     {section.entries.map((entry, index) => (
                       <div key={`${entry.title}-${index}`}>
-                        <p className="text-[13px] font-semibold text-slate-900">{entry.title}</p>
-                        <p className="text-[11px] italic text-slate-500">
+                        <p className="text-[13px] font-semibold text-ink">{entry.title}</p>
+                        <p className="text-[11px] italic text-muted">
                           {[entry.organization, entry.location, entry.dates].filter(Boolean).join("  ·  ")}
                         </p>
                         <ul className="mt-1 space-y-0.5">
                           {entry.bullets.map((bullet, bulletIndex) => (
-                            <li key={bulletIndex} className="flex gap-1.5 text-[12px] leading-relaxed text-slate-700">
-                              <span className="text-slate-400">•</span>
+                            <li key={bulletIndex} className="flex gap-1.5 text-[12px] leading-relaxed text-ink-soft">
+                              <span className="text-muted">•</span>
                               {bullet.text}
                             </li>
                           ))}
@@ -226,10 +226,10 @@ export function ResumeWorkspace({
 
             {content.skills.core.text ? (
               <div className="mt-4">
-                <h3 className="border-b border-slate-200 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Skills</h3>
-                <p className="mt-2 text-[12px] leading-relaxed text-slate-700">{content.skills.core.text}</p>
+                <h3 className="border-b border-line pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Skills</h3>
+                <p className="mt-2 text-[12px] leading-relaxed text-ink-soft">{content.skills.core.text}</p>
                 {content.skills.learning?.text ? (
-                  <p className="mt-1 text-[11px] italic leading-relaxed text-slate-500">{content.skills.learning.text}</p>
+                  <p className="mt-1 text-[11px] italic leading-relaxed text-muted">{content.skills.learning.text}</p>
                 ) : null}
               </div>
             ) : null}
@@ -238,17 +238,17 @@ export function ResumeWorkspace({
 
         <div className="card card-pad no-print">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900">Base vs tailored</h3>
+            <h3 className="text-sm font-semibold text-ink">Base vs tailored</h3>
             <button type="button" className="btn-ghost btn-sm" onClick={() => setShowBase((current) => !current)}>
               {showBase ? "Hide base resume" : "Compare with base resume"}
             </button>
           </div>
           {showBase ? (
-            <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 font-mono text-[11px] leading-relaxed text-slate-600">
+            <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-md bg-[#fbfaf8] p-3 font-mono text-[11px] leading-relaxed text-ink-soft">
               {baseResumeText ?? "No base resume text stored. Your facts are still the source of truth."}
             </pre>
           ) : (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted">
               The tailored draft reorders and reframes your verified facts; it never adds new claims. Open the comparison to see the
               original source text.
             </p>
@@ -258,39 +258,39 @@ export function ResumeWorkspace({
 
       <div className="space-y-4 no-print">
         <div className="card card-pad">
-          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-            <Sparkles size={14} className="text-brand-600" /> Generation summary
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+            <Sparkles size={14} className="text-ink" /> Generation summary
           </h3>
           <dl className="mt-2.5 space-y-1.5 text-[11px]">
             <div className="flex justify-between">
-              <dt className="text-slate-500">Engine</dt>
-              <dd className="font-medium text-slate-800">{metadata.engine}</dd>
+              <dt className="text-muted">Engine</dt>
+              <dd className="font-medium text-ink">{metadata.engine}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Provider</dt>
-              <dd className="max-w-[60%] truncate text-right font-medium text-slate-800">{metadata.provider}</dd>
+              <dt className="text-muted">Provider</dt>
+              <dd className="max-w-[60%] truncate text-right font-medium text-ink">{metadata.provider}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Evidence used</dt>
-              <dd className="font-medium text-slate-800">{metadata.evidenceUsed} facts</dd>
+              <dt className="text-muted">Evidence used</dt>
+              <dd className="font-medium text-ink">{metadata.evidenceUsed} facts</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Requirements matched</dt>
-              <dd className="font-medium text-emerald-700">{metadata.requirementsMatched.length}</dd>
+              <dt className="text-muted">Requirements matched</dt>
+              <dd className="font-medium text-moss-700">{metadata.requirementsMatched.length}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Requirements missing</dt>
-              <dd className="font-medium text-amber-700">{metadata.requirementsMissing.length}</dd>
+              <dt className="text-muted">Requirements missing</dt>
+              <dd className="font-medium text-[#8a5a06]">{metadata.requirementsMissing.length}</dd>
             </div>
           </dl>
-          <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+          <p className="mt-2 text-[10px] leading-relaxed text-muted">
             Generated {new Date(metadata.generatedAt).toLocaleString("en-GB")}. Approach: deterministic selection and rewriting over
             verified facts; every sentence carries an evidence link.
           </p>
           {metadata.warnings.length ? (
             <ul className="mt-2 space-y-1">
               {metadata.warnings.map((warning) => (
-                <li key={warning} className="rounded bg-amber-50 px-2 py-1 text-[10px] text-amber-800">
+                <li key={warning} className="rounded bg-[#fdf9ef] px-2 py-1 text-[10px] text-[#8a5a06]">
                   {warning}
                 </li>
               ))}
@@ -299,45 +299,45 @@ export function ResumeWorkspace({
         </div>
 
         {unsupported.length ? (
-          <div className="card border-rose-200 card-pad">
-            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-rose-700">
+          <div className="card border-clay-100 card-pad">
+            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-clay-700">
               <ShieldAlert size={15} /> {unsupported.length} unsupported statement{unsupported.length === 1 ? "" : "s"}
             </h3>
-            <p className="mt-1 text-[11px] leading-relaxed text-rose-700/80">
+            <p className="mt-1 text-[11px] leading-relaxed text-clay-700/80">
               These lines could not be traced to a verified fact. Approving is blocked until they are removed or backed by evidence.
             </p>
             <ul className="mt-2 space-y-1.5">
               {unsupported.map((item, index) => (
-                <li key={`${item.reason}-${index}`} className="rounded bg-rose-50 px-2 py-1.5 text-[11px] text-rose-800">
+                <li key={`${item.reason}-${index}`} className="rounded bg-clay-50 px-2 py-1.5 text-[11px] text-clay-700">
                   <span className="font-semibold capitalize">{item.reason.replaceAll("_", " ")}:</span> {item.detail}
                 </li>
               ))}
             </ul>
           </div>
         ) : (
-          <div className="card border-emerald-200 card-pad">
-            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
+          <div className="card border-moss-100 card-pad">
+            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-moss-700">
               <ShieldCheck size={15} /> Evidence check passed
             </h3>
-            <p className="mt-1 text-[11px] leading-relaxed text-emerald-800/80">
+            <p className="mt-1 text-[11px] leading-relaxed text-moss-700/80">
               Every claim in this draft maps to a verified profile fact. Skills and numbers were cross-checked against your evidence.
             </p>
           </div>
         )}
 
         <div className="card card-pad">
-          <h3 className="text-sm font-semibold text-slate-900">Change log</h3>
-          <p className="mt-0.5 text-[11px] text-slate-500">Exactly what the generator did to your base resume.</p>
+          <h3 className="text-sm font-semibold text-ink">Change log</h3>
+          <p className="mt-0.5 text-[11px] text-muted">Exactly what the generator did to your base resume.</p>
           <ol className="mt-2.5 space-y-2.5">
             {changeLog.map((entry) => (
-              <li key={entry.id} className="border-l-2 border-slate-200 pl-2.5">
+              <li key={entry.id} className="border-l-2 border-line pl-2.5">
                 <div className="flex items-center gap-1.5">
-                  <span className={LOG_STYLES[entry.type] ?? "badge-neutral"}>{entry.type}</span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{entry.section}</span>
+                  <span className={LOG_STYLES[entry.type] ?? "chip"}>{entry.type}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">{entry.section}</span>
                 </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{entry.description}</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-ink-soft">{entry.description}</p>
                 {entry.evidenceIds.length ? (
-                  <p className="mt-0.5 text-[10px] text-slate-400">
+                  <p className="mt-0.5 text-[10px] text-muted">
                     {entry.evidenceIds.length} evidence link{entry.evidenceIds.length === 1 ? "" : "s"}
                   </p>
                 ) : null}
@@ -347,7 +347,7 @@ export function ResumeWorkspace({
         </div>
 
         <div className="card card-pad">
-          <h3 className="text-sm font-semibold text-slate-900">Your review</h3>
+          <h3 className="text-sm font-semibold text-ink">Your review</h3>
           <div className="mt-2 flex flex-wrap gap-2">
             {editing ? (
               <>
@@ -373,7 +373,7 @@ export function ResumeWorkspace({
             )}
             <button
               type="button"
-              className={`btn-sm btn ${approved ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "btn-secondary"}`}
+              className={`btn-sm btn ${approved ? "bg-moss-50 text-moss-700 ring-1 ring-moss-100" : "btn-secondary"}`}
               onClick={approve}
               disabled={busy === "approve" || approved || unsupported.length > 0}
               title={unsupported.length ? "Resolve flagged statements first" : undefined}
@@ -382,12 +382,12 @@ export function ResumeWorkspace({
               {approved ? "Resume approved" : "Approve this resume"}
             </button>
           </div>
-          <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+          <p className="mt-2 text-[10px] leading-relaxed text-muted">
             Approving the resume is not approving an application. Editing it afterwards invalidates any application approval.
           </p>
 
-          <div className="mt-4 border-t border-slate-100 pt-3">
-            <label className="flex items-center gap-2 text-[11px] text-slate-600">
+          <div className="mt-4 border-t border-line pt-3">
+            <label className="flex items-center gap-2 text-[11px] text-ink-soft">
               <input type="checkbox" checked={includeCover} onChange={(event) => setIncludeCover(event.target.checked)} />
               Include a cover letter drafted from the same verified facts
             </label>
@@ -407,11 +407,11 @@ export function ResumeWorkspace({
                 Assemble application package
               </button>
             )}
-            {!approved ? <p className="mt-1 text-center text-[10px] text-slate-400">Approve the resume to unlock the approval centre.</p> : null}
+            {!approved ? <p className="mt-1 text-center text-[10px] text-muted">Approve the resume to unlock the approval centre.</p> : null}
           </div>
         </div>
 
-        {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
+        {error ? <p className="rounded-md bg-clay-50 px-3 py-2 text-xs text-clay-700">{error}</p> : null}
       </div>
     </div>
   );

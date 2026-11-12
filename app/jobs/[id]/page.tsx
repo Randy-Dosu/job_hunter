@@ -1,24 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft,
-  BadgeCheck,
-  Building2,
-  CalendarDays,
-  CircleAlert,
-  ExternalLink,
-  MapPin,
-  ShieldAlert,
-  Sparkles,
-  TriangleAlert,
-  Wallet,
-} from "lucide-react";
-import { AppShell, PageHeader } from "@/components/app-shell";
+import { ArrowLeft, ExternalLink } from "lucide-react";
+import { AppShell } from "@/components/app-shell";
 import { FeedbackButtons, TailorResumeButton } from "@/components/job-actions";
-import { Callout, ConfidenceBar, ScoreRing, SourceLink, VERDICT_COPY, VerdictBadge, formatDate } from "@/components/ui";
+import { Callout, CompanyMark, MatchScore, SourceLink, VerdictBadge, formatDate } from "@/components/ui";
 import { getMatch } from "@/lib/search";
 import { requireUser } from "@/lib/auth";
-import { all, get } from "@/lib/db";
+import { get } from "@/lib/db";
 import { extractRequirements, skillLabel } from "@/lib/matching/requirements";
 import { verifiedSkills } from "@/lib/matching/score";
 import { getProfileContext } from "@/lib/profile";
@@ -47,9 +35,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
     id,
   );
   const application = get<{ id: string; status: string }>("SELECT id, status FROM applications WHERE user_id = ? AND job_id = ?", user.id, id);
-  const verdictCopy = VERDICT_COPY[match.verdict] ?? VERDICT_COPY.low;
-  const unsupportedCount = tailored ? JSON.parse(tailored.unsupported_json || "[]").length : 0;
-
+  const unsupportedCount = tailored ? (JSON.parse(tailored.unsupported_json || "[]") as unknown[]).length : 0;
   const descriptionBlocks = job.description
     .split(/\n{2,}/)
     .map((block) => block.trim())
@@ -57,154 +43,115 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <AppShell>
-      <Link href="/jobs" className="mb-4 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800">
-        <ArrowLeft size={13} /> Back to feed
+      <Link href="/jobs" className="mb-4 inline-flex items-center gap-1 text-[12px] text-muted hover:text-ink">
+        <ArrowLeft size={13} /> All jobs
       </Link>
 
-      <PageHeader
-        eyebrow={`${job.source_name} · found ${formatRelative(job.first_seen_at)}`}
-        title={job.title}
-        description={`${job.company} · ${job.location} · ${job.remote_policy} · ${job.employment_type}`}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <a href={job.application_url} target="_blank" rel="noopener noreferrer nofollow" className="btn-secondary">
-              <ExternalLink size={14} /> Official application
-            </a>
-            <TailorResumeButton jobId={job.id} existingResumeId={tailored?.id ?? null} />
-          </div>
-        }
-      />
-
       {match.verdict === "excluded" ? (
-        <div className="mb-5">
-          <Callout tone="danger" title="This job is excluded by a hard filter">
-            <ul className="mt-1 list-disc space-y-0.5 pl-4">
-              {match.reasons
-                .filter((reason) => reason.strength === "warning")
-                .map((reason) => (
-                  <li key={reason.text}>{reason.text}</li>
-                ))}
-              {match.verdict === "excluded" && match.gaps.length === 0 ? <li>One of your exclusions matched this listing.</li> : null}
-            </ul>
-            <p className="mt-1.5 text-xs opacity-80">
-              Hard filters always beat a high numeric score. Adjust exclusions in settings if this was too strict.
-            </p>
+        <div className="mb-4">
+          <Callout tone="danger" title="Excluded by one of your hard filters">
+            {match.gaps.length
+              ? match.gaps.map((gap) => gap.text).join(" ")
+              : "A closed vacancy, excluded employer or location preference blocked this listing."}{" "}
+            <Link href="/settings#market" className="underline">
+              Review exclusions
+            </Link>
+            .
           </Callout>
         </div>
       ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <div className="space-y-5">
-          <section className="card card-pad">
-            <div className="flex items-center gap-4">
-              <ScoreRing score={Math.round(match.score)} confidence={match.confidence} verdict={match.verdict} size={72} />
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <VerdictBadge verdict={match.verdict} />
-                  <span className="text-[11px] text-slate-500">{verdictCopy.blurb}</span>
-                </div>
-                <div className="mt-2">
-                  <ConfidenceBar value={match.confidence} />
-                </div>
-              </div>
+      <header className="border-b border-line pb-5">
+        <div className="flex flex-wrap items-start gap-4">
+          <CompanyMark name={job.company} size={54} />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+              <VerdictBadge verdict={match.verdict} />
+              <span className="text-[11.5px] text-muted">·</span>
+              <span className="text-[11.5px] text-muted">{job.source_name}</span>
+              <span className="text-[11.5px] text-muted">·</span>
+              <span className="text-[11.5px] text-muted">Found {formatRelative(job.first_seen_at)}</span>
             </div>
-
-            <div className="mt-5 space-y-2.5">
-              {match.components.map((component) => (
-                <div key={component.key}>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-slate-700">{component.label}</span>
-                    <span className="text-slate-500">
-                      {component.points.toFixed(1)} / {component.weight}
-                    </span>
-                  </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className={`h-full rounded-full ${
-                        component.score >= 0.75 ? "bg-emerald-500" : component.score >= 0.45 ? "bg-amber-400" : "bg-rose-400"
-                      }`}
-                      style={{ width: `${Math.round(component.score * 100)}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                    {component.note}
-                    {component.confidence < 0.5 ? <span className="ml-1 text-amber-600">(low data confidence)</span> : null}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="card card-pad">
-            <h2 className="text-sm font-semibold text-slate-900">Why this was recommended</h2>
-            <ul className="mt-2 space-y-2">
-              {match.reasons.map((reason) => (
-                <li key={`${reason.dimension}-${reason.text}`} className="flex gap-2 text-sm">
-                  <span
-                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                      reason.strength === "strong" ? "bg-emerald-500" : reason.strength === "warning" ? "bg-amber-500" : "bg-slate-400"
-                    }`}
-                  />
-                  <span className="text-slate-600">{reason.text}</span>
-                </li>
-              ))}
-              {!match.reasons.length ? <li className="muted">No supporting evidence was found in your profile.</li> : null}
-            </ul>
-
-            <h2 className="mt-5 text-sm font-semibold text-slate-900">Gaps to weigh up</h2>
-            <ul className="mt-2 space-y-2">
-              {match.gaps.map((gap, index) => (
-                <li key={`${gap.text}-${index}`} className="flex gap-2 text-sm">
-                  <TriangleAlert size={13} className={`mt-1 shrink-0 ${gap.required ? "text-rose-500" : "text-amber-500"}`} />
-                  <span className="text-slate-600">
-                    {gap.text}
-                    <span className={`ml-1.5 text-[10px] font-semibold uppercase tracking-wide ${gap.required ? "text-rose-500" : "text-amber-600"}`}>
-                      {gap.required ? "required" : "preference"}
-                    </span>
-                  </span>
-                </li>
-              ))}
-              {!match.gaps.length ? (
-                <li className="flex items-center gap-1.5 text-sm text-emerald-700">
-                  <BadgeCheck size={14} /> No required qualification is missing from your verified profile.
-                </li>
+            <h1 className="mt-1.5 text-[26px] font-semibold leading-tight tracking-[-0.03em] text-ink">{job.title}</h1>
+            <p className="mt-1 text-[13px] text-ink-soft">
+              {job.company}
+              <span className="text-muted"> · {job.location} · </span>
+              <span className="capitalize">{job.remote_policy}</span>
+              <span className="text-muted"> · </span>
+              <span className="capitalize">{job.employment_type}</span>
+              {job.salary ? (
+                <>
+                  <span className="text-muted"> · </span>
+                  <span className="font-medium text-moss-700">{job.salary}</span>
+                </>
               ) : null}
-            </ul>
+            </p>
+          </div>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <a
+              href={job.application_url}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="btn-secondary"
+              title="Opens the employer's own application page"
+            >
+              <ExternalLink size={13} /> Official page
+            </a>
+            <TailorResumeButton jobId={job.id} existingResumeId={tailored?.id ?? null} />
+          </div>
+        </div>
+      </header>
+
+      <div className="mt-7 grid gap-9 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-7">
+          <section>
+            <h2 className="text-[13px] font-semibold text-ink">About the role</h2>
+            <div className="prose-body mt-2">
+              {descriptionBlocks.map((block, index) => (
+                <p key={index} className="whitespace-pre-line">
+                  {block}
+                </p>
+              ))}
+            </div>
           </section>
 
-          <section className="card card-pad">
-            <h2 className="text-sm font-semibold text-slate-900">Requirements extracted from the listing</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Structured deterministically from the job description. “Required” means we found it in a requirements section.
-            </p>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <section>
+            <h2 className="text-[13px] font-semibold text-ink">Requirements in the listing</h2>
+            <p className="mt-0.5 text-[11.5px] text-muted">Extracted deterministically from the description and checked against your evidence.</p>
+            <div className="mt-3 grid gap-5 sm:grid-cols-2">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Required</p>
-                <ul className="mt-1.5 space-y-1">
+                <p className="label-xs mb-1.5">Required</p>
+                <ul className="space-y-1">
                   {requirements.required.map((req) => {
-                    const held = heldSkills.has(req.skill);
+                    const held = heldSkills.get(req.skill) ?? 0;
                     return (
-                      <li key={req.skill} className="flex items-center gap-1.5 text-xs">
-                        {held ? <BadgeCheck size={12} className="text-emerald-600" /> : <CircleAlert size={12} className="text-rose-500" />}
-                        <span className={held ? "text-slate-700" : "text-slate-500"}>{skillLabel(req.skill)}</span>
+                      <li key={req.skill} className="flex items-start gap-2 text-[12.5px]">
+                        <span className={`mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full ${held === 1 ? "bg-moss-600" : held > 0 ? "bg-[#c58a12]" : "bg-clay-500"}`} />
+                        <span className={held ? "text-ink-soft" : "text-muted"}>
+                          {skillLabel(req.skill)}
+                          {held > 0 && held < 1 ? <span className="ml-1 text-[10.5px] text-[#8a5a06]">learning only</span> : null}
+                          {!held ? <span className="ml-1 text-[10.5px] text-clay-700">not evidenced</span> : null}
+                        </span>
                       </li>
                     );
                   })}
-                  {!requirements.required.length ? <li className="muted text-xs">No explicit requirements detected.</li> : null}
+                  {!requirements.required.length ? <li className="text-[12px] text-muted">No explicit requirements detected.</li> : null}
                 </ul>
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Preferred</p>
-                <ul className="mt-1.5 space-y-1">
+                <p className="label-xs mb-1.5">Preferred</p>
+                <ul className="space-y-1">
                   {requirements.preferred.map((req) => (
-                    <li key={req.skill} className="flex items-center gap-1.5 text-xs text-slate-600">
-                      <Sparkles size={12} className="text-slate-400" /> {skillLabel(req.skill)}
+                    <li key={req.skill} className="flex items-start gap-2 text-[12.5px] text-ink-soft">
+                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#c9c5be]" />
+                      {skillLabel(req.skill)}
                     </li>
                   ))}
-                  {!requirements.preferred.length ? <li className="muted text-xs">No preferred skills detected.</li> : null}
+                  {!requirements.preferred.length ? <li className="text-[12px] text-muted">No preferred skills detected.</li> : null}
                 </ul>
               </div>
             </div>
+
             {requirements.redFlags.length ? (
               <div className="mt-4">
                 <Callout tone="danger" title="Warning signs in this listing">
@@ -214,103 +161,161 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             ) : null}
           </section>
 
-          <section className="card card-pad">
-            <h2 className="text-sm font-semibold text-slate-900">Job description</h2>
-            <div className="mt-3 space-y-2.5">
-              {descriptionBlocks.map((block, index) => (
-                <p key={index} className="whitespace-pre-line text-[13px] leading-relaxed text-slate-600">
-                  {block}
+          <section className="border-t border-line pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <SourceLink href={job.canonical_url} label={`View original listing on ${job.source_name}`} />
+                <p className="mt-1 text-[10.5px] leading-relaxed text-muted">
+                  Source ID {job.external_id} · first seen {formatRelative(job.first_seen_at)} · last checked {formatRelative(job.last_seen_at)} · status{" "}
+                  <span className={job.status === "open" ? "text-moss-700" : "text-clay-700"}>{job.status}</span>
                 </p>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        <div className="space-y-5">
-          <section className="card card-pad">
-            <h2 className="text-sm font-semibold text-slate-900">Vacancy facts</h2>
-            <dl className="mt-3 space-y-2.5 text-xs">
-              {[
-                { icon: Building2, label: "Employer", value: job.company },
-                { icon: MapPin, label: "Location", value: `${job.location} · ${job.remote_policy}` },
-                { icon: Wallet, label: "Salary", value: job.salary ?? "Not disclosed" },
-                { icon: CalendarDays, label: "Posted", value: job.posted_at ? formatDate(job.posted_at, { day: "numeric", month: "short", year: "numeric" }) : "Unknown" },
-                { icon: CalendarDays, label: "Deadline", value: job.deadline ? formatDate(job.deadline, { day: "numeric", month: "short", year: "numeric" }) : "Not stated" },
-              ].map((fact) => (
-                <div key={fact.label} className="flex items-start justify-between gap-3">
-                  <dt className="flex items-center gap-1.5 text-slate-500">
-                    <fact.icon size={12} /> {fact.label}
-                  </dt>
-                  <dd className="max-w-[60%] text-right font-medium capitalize text-slate-800">{fact.value}</dd>
-                </div>
-              ))}
-              <div className="flex items-start justify-between gap-3">
-                <dt className="flex items-center gap-1.5 text-slate-500">
-                  <ShieldAlert size={12} /> Status
-                </dt>
-                <dd className="text-right">
-                  <span className={job.status === "open" ? "badge-strong" : job.status === "closed" ? "badge-excluded" : "badge-possible"}>
-                    {job.status}
-                  </span>
-                </dd>
               </div>
-            </dl>
-            <div className="mt-3 border-t border-slate-100 pt-3">
-              <SourceLink href={job.canonical_url} label={`View on ${job.source_name}`} />
-              <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
-                Source ID {job.external_id} · first seen {formatRelative(job.first_seen_at)} · last checked {formatRelative(job.last_seen_at)}
-              </p>
-            </div>
-          </section>
-
-          <section className="card card-pad">
-            <h2 className="text-sm font-semibold text-slate-900">Application state</h2>
-            <ul className="mt-2 space-y-2 text-xs">
-              <li className="flex items-center justify-between">
-                <span className="text-slate-500">Tailored resume</span>
-                {tailored ? (
-                  <Link href={`/resumes/${tailored.id}`} className="font-semibold text-brand-600 hover:underline">
-                    {tailored.status === "user_approved" ? "Approved by you" : "Draft"}
-                    {unsupportedCount ? ` · ${unsupportedCount} flagged` : ""}
-                  </Link>
-                ) : (
-                  <span className="text-slate-400">not created</span>
-                )}
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="text-slate-500">Package</span>
-                {pkg ? (
-                  <Link href={`/approvals/${pkg.id}`} className="font-semibold text-brand-600 hover:underline">
-                    {pkg.status.replaceAll("_", " ").toLowerCase()}
-                  </Link>
-                ) : (
-                  <span className="text-slate-400">not assembled</span>
-                )}
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="text-slate-500">Application</span>
-                {application ? (
-                  <span className="font-medium capitalize text-slate-700">{application.status.replaceAll("_", " ")}</span>
-                ) : (
-                  <span className="text-slate-400">nothing submitted</span>
-                )}
-              </li>
-            </ul>
-            <div className="mt-3 border-t border-slate-100 pt-3">
               <FeedbackButtons jobId={job.id} current={match.feedback} />
             </div>
           </section>
+        </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-xs leading-relaxed text-slate-600">
-            <p className="flex items-center gap-1.5 font-semibold text-slate-800">
-              <ShieldAlert size={13} className="text-brand-600" /> Before you apply
-            </p>
-            <p className="mt-1.5">
-              Confirm the vacancy is still open on the employer&apos;s site, check the work-authorization wording, and read the
-              deadline in the original listing. We never submit for you without a job-specific approval.
+        <aside className="min-w-0 space-y-6">
+          <section className="rounded-[10px] border border-line bg-surface p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-[13px] font-semibold text-ink">Match details</h2>
+                <p className="mt-0.5 text-[11.5px] text-muted">{match.confidence}% data confidence</p>
+              </div>
+              <MatchScore score={match.score} verdict={match.verdict} size="lg" />
+            </div>
+
+            <div className="mt-4 space-y-2.5">
+              {match.components.map((component) => (
+                <div key={component.key}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-[11.5px] text-ink-soft">{component.label}</span>
+                    <span className="number text-[11px] text-muted">
+                      {component.points.toFixed(1)}/{component.weight}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-[#eeeae4]">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.round(component.score * 100)}%`,
+                        background: component.score >= 0.75 ? "#17694a" : component.score >= 0.45 ? "#c58a12" : "#b5451f",
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[10.5px] leading-relaxed text-muted">
+                    {component.note}
+                    {component.confidence < 0.5 ? <span className="ml-1 text-[#8a5a06]">low data</span> : null}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-[10px] border border-line bg-surface p-4">
+            <h2 className="text-[13px] font-semibold text-ink">Strong evidence</h2>
+            <ul className="mt-2 space-y-1.5">
+              {match.reasons.map((reason) => (
+                <li key={`${reason.dimension}-${reason.text}`} className="flex gap-2 text-[12px] leading-relaxed text-ink-soft">
+                  <span
+                    className={`mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full ${
+                      reason.strength === "strong" ? "bg-moss-600" : reason.strength === "warning" ? "bg-[#c58a12]" : "bg-[#c9c5be]"
+                    }`}
+                  />
+                  {reason.text}
+                </li>
+              ))}
+              {!match.reasons.length ? <li className="text-[12px] text-muted">No supporting evidence found.</li> : null}
+            </ul>
+
+            <h2 className="mt-4 text-[13px] font-semibold text-ink">Gaps</h2>
+            <ul className="mt-2 space-y-1.5">
+              {match.gaps.map((gap, index) => (
+                <li key={`${gap.text}-${index}`} className="flex gap-2 text-[12px] leading-relaxed text-ink-soft">
+                  <span className={`mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full ${gap.required ? "bg-clay-500" : "bg-[#c58a12]"}`} />
+                  <span>
+                    {gap.text}
+                    <span className={`ml-1 text-[10px] font-semibold uppercase tracking-[0.05em] ${gap.required ? "text-clay-700" : "text-[#8a5a06]"}`}>
+                      {gap.required ? "required" : "preference"}
+                    </span>
+                  </span>
+                </li>
+              ))}
+              {!match.gaps.length ? <li className="text-[12px] text-moss-700">No required qualification is missing from your verified profile.</li> : null}
+            </ul>
+          </section>
+
+          <section className="rounded-[10px] border border-line bg-surface p-4">
+            <h2 className="text-[13px] font-semibold text-ink">Vacancy</h2>
+            <dl className="mt-2 divide-y divide-line">
+              <div className="kv">
+                <dt>Employer</dt>
+                <dd>{job.company}</dd>
+              </div>
+              <div className="kv">
+                <dt>Location</dt>
+                <dd className="capitalize">{job.location}</dd>
+              </div>
+              <div className="kv">
+                <dt>Salary</dt>
+                <dd>{job.salary ?? "Not disclosed"}</dd>
+              </div>
+              <div className="kv">
+                <dt>Posted</dt>
+                <dd>{job.posted_at ? formatDate(job.posted_at, { day: "numeric", month: "short", year: "numeric" }) : "Unknown"}</dd>
+              </div>
+              <div className="kv">
+                <dt>Deadline</dt>
+                <dd>{job.deadline ? formatDate(job.deadline, { day: "numeric", month: "short", year: "numeric" }) : "Not stated"}</dd>
+              </div>
+              <div className="kv">
+                <dt>Status</dt>
+                <dd>
+                  <span className={job.status === "open" ? "chip-moss" : job.status === "closed" ? "chip-clay" : "chip"}>{job.status}</span>
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="rounded-[10px] border border-line bg-surface p-4">
+            <h2 className="text-[13px] font-semibold text-ink">Application</h2>
+            <dl className="mt-2 space-y-2 text-[12px]">
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-muted">Tailored resume</dt>
+                <dd>
+                  {tailored ? (
+                    <Link href={`/resumes/${tailored.id}`} className="font-medium text-ink hover:underline">
+                      {tailored.status === "user_approved" ? "Approved" : "Draft"}
+                      {unsupportedCount ? ` · ${unsupportedCount} flagged` : ""}
+                    </Link>
+                  ) : (
+                    <span className="text-muted">Not created</span>
+                  )}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-muted">Package</dt>
+                <dd>
+                  {pkg ? (
+                    <Link href={`/approvals/${pkg.id}`} className="font-medium text-ink hover:underline">
+                      {pkg.status.replaceAll("_", " ").toLowerCase()}
+                    </Link>
+                  ) : (
+                    <span className="text-muted">Not assembled</span>
+                  )}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-muted">Application</dt>
+                <dd className="text-ink">{application ? application.status.replaceAll("_", " ") : "Nothing submitted"}</dd>
+              </div>
+            </dl>
+            <p className="mt-2.5 border-t border-line pt-2.5 text-[10.5px] leading-relaxed text-muted">
+              Confirm the vacancy is still open and check the work-authorization wording on the employer&apos;s site. Job Hunter never
+              submits for you.
             </p>
           </section>
-        </div>
+        </aside>
       </div>
     </AppShell>
   );

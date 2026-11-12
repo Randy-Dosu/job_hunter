@@ -104,7 +104,7 @@ function ChipInput({
     <div>
       <div className="mb-2 flex flex-wrap gap-1.5">
         {values.map((value) => (
-          <span key={value} className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-600/10">
+          <span key={value} className="inline-flex items-center gap-1 rounded-full bg-[#f1eee9] px-2.5 py-1 text-xs font-medium text-ink ring-1 ring-line">
             {value}
             <button type="button" onClick={() => onChange(values.filter((item) => item !== value))} aria-label={`Remove ${value}`}>
               <X size={11} />
@@ -114,7 +114,7 @@ function ChipInput({
       </div>
       <div className="flex gap-2">
         <input
-          className="input"
+          className="field"
           value={draft}
           placeholder={placeholder}
           onChange={(event) => setDraft(event.target.value)}
@@ -280,12 +280,12 @@ export function OnboardingWizard(props: Props) {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
       <div className="mb-6 flex items-center gap-2.5">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white">
+        <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-ink text-white">
           <Sparkles size={17} />
         </span>
         <div>
-          <p className="text-sm font-semibold text-slate-900">Set up your job hunt</p>
-          <p className="text-[11px] text-slate-500">Step {step + 1} of {STEPS.length} · takes about four minutes</p>
+          <p className="text-sm font-semibold text-ink">Set up your job hunt</p>
+          <p className="text-[11px] text-muted">Step {step + 1} of {STEPS.length} · takes about four minutes</p>
         </div>
       </div>
 
@@ -295,20 +295,20 @@ export function OnboardingWizard(props: Props) {
             <button
               type="button"
               onClick={() => setStep(index)}
-              className={`flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold transition ${
-                index === step ? "bg-brand-50 text-brand-700" : index < step ? "text-emerald-700" : "text-slate-400"
+              className={`flex items-center gap-2 rounded-md px-2 py-1 text-xs font-semibold transition ${
+                index === step ? "bg-[#f1eee9] text-ink" : index < step ? "text-moss-700" : "text-muted"
               }`}
             >
               <span
                 className={`grid h-5 w-5 place-items-center rounded-full text-[10px] ${
-                  index === step ? "bg-brand-600 text-white" : index < step ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"
+                  index === step ? "bg-ink text-white" : index < step ? "bg-moss-600 text-white" : "bg-[#e8e4dd] text-muted"
                 }`}
               >
                 {index < step ? <Check size={11} /> : index + 1}
               </span>
               <span className="hidden sm:inline">{label}</span>
             </button>
-            {index < STEPS.length - 1 ? <span className="h-px flex-1 bg-slate-200" /> : null}
+            {index < STEPS.length - 1 ? <span className="h-px flex-1 bg-[#e8e4dd]" /> : null}
           </li>
         ))}
       </ol>
@@ -317,24 +317,24 @@ export function OnboardingWizard(props: Props) {
         {step === 0 ? (
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-slate-900">Hi {props.name.split(" ")[0]} — what should we call you?</h2>
-              <p className="mt-1 text-sm text-slate-500">These details appear on generated resumes. You can change them any time.</p>
+              <h2 className="text-lg font-semibold tracking-tight text-ink">Hi {props.name.split(" ")[0]} — what should we call you?</h2>
+              <p className="mt-1 text-sm text-muted">These details appear on generated resumes. You can change them any time.</p>
             </div>
             <div>
-              <label className="label" htmlFor="headline">Professional headline</label>
+              <label className="field-label" htmlFor="headline">Professional headline</label>
               <input
                 id="headline"
-                className="input"
+                className="field"
                 value={profile.headline}
                 onChange={(event) => setProfile({ ...profile, headline: event.target.value })}
                 placeholder="Junior software developer — React, TypeScript, Node.js"
               />
             </div>
             <div>
-              <label className="label" htmlFor="summary">Short summary</label>
+              <label className="field-label" htmlFor="summary">Short summary</label>
               <textarea
                 id="summary"
-                className="input min-h-28"
+                className="field min-h-28"
                 value={profile.summary}
                 onChange={(event) => setProfile({ ...profile, summary: event.target.value })}
                 placeholder="Two or three sentences about your background, what you build and what you are looking for."
@@ -342,20 +342,20 @@ export function OnboardingWizard(props: Props) {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="label" htmlFor="location">Location</label>
+                <label className="field-label" htmlFor="location">Location</label>
                 <input
                   id="location"
-                  className="input"
+                  className="field"
                   value={profile.location}
                   onChange={(event) => setProfile({ ...profile, location: event.target.value })}
                   placeholder="Kumasi, Ghana"
                 />
               </div>
               <div>
-                <label className="label" htmlFor="timezone">Time zone</label>
+                <label className="field-label" htmlFor="timezone">Time zone</label>
                 <input
                   id="timezone"
-                  className="input"
+                  className="field"
                   value={profile.timezone}
                   onChange={(event) => setProfile({ ...profile, timezone: event.target.value })}
                   placeholder="Africa/Accra"
@@ -363,16 +363,16 @@ export function OnboardingWizard(props: Props) {
               </div>
             </div>
             <div>
-              <label className="label" htmlFor="auth">Work authorization</label>
+              <label className="field-label" htmlFor="auth">Work authorization</label>
               <input
                 id="auth"
-                className="input"
+                className="field"
                 value={profile.workAuthorization}
                 onChange={(event) => setProfile({ ...profile, workAuthorization: event.target.value })}
                 placeholder="Ghana — authorised to work remotely; needs sponsorship for on-site roles abroad"
               />
             </div>
-            <label className="flex items-start gap-2.5 rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+            <label className="flex items-start gap-2.5 rounded-md border border-line px-3 py-2.5 text-sm">
               <input
                 type="checkbox"
                 className="mt-0.5"
@@ -380,8 +380,8 @@ export function OnboardingWizard(props: Props) {
                 onChange={(event) => setProfile({ ...profile, needsSponsorship: event.target.checked })}
               />
               <span>
-                <span className="font-medium text-slate-800">I need visa sponsorship</span>
-                <span className="block text-xs text-slate-500">Roles that explicitly cannot sponsor will be filtered out.</span>
+                <span className="font-medium text-ink">I need visa sponsorship</span>
+                <span className="block text-xs text-muted">Roles that explicitly cannot sponsor will be filtered out.</span>
               </span>
             </label>
           </div>
@@ -390,11 +390,11 @@ export function OnboardingWizard(props: Props) {
         {step === 1 ? (
           <div className="space-y-5">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-slate-900">Define your market</h2>
-              <p className="mt-1 text-sm text-slate-500">We only search what you allow here, and hard filters always win over a high score.</p>
+              <h2 className="text-lg font-semibold tracking-tight text-ink">Define your market</h2>
+              <p className="mt-1 text-sm text-muted">We only search what you allow here, and hard filters always win over a high score.</p>
             </div>
             <div>
-              <label className="label">Target job titles</label>
+              <label className="field-label">Target job titles</label>
               <ChipInput
                 values={prefs.roleTitles}
                 onChange={(roleTitles) => setPrefs({ ...prefs, roleTitles })}
@@ -403,11 +403,11 @@ export function OnboardingWizard(props: Props) {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="label">Countries you can work from</label>
+                <label className="field-label">Countries you can work from</label>
                 <ChipInput values={prefs.countries} onChange={(countries) => setPrefs({ ...prefs, countries })} placeholder="Ghana, Worldwide…" />
               </div>
               <div>
-                <label className="label">Remote eligibility regions</label>
+                <label className="field-label">Remote eligibility regions</label>
                 <ChipInput
                   values={prefs.remoteRegions}
                   onChange={(remoteRegions) => setPrefs({ ...prefs, remoteRegions })}
@@ -417,10 +417,10 @@ export function OnboardingWizard(props: Props) {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="label" htmlFor="remote">Work arrangement</label>
+                <label className="field-label" htmlFor="remote">Work arrangement</label>
                 <select
                   id="remote"
-                  className="input"
+                  className="field"
                   value={prefs.remotePreference}
                   onChange={(event) => setPrefs({ ...prefs, remotePreference: event.target.value })}
                 >
@@ -432,22 +432,22 @@ export function OnboardingWizard(props: Props) {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="label" htmlFor="salary">Salary floor</label>
+                  <label className="field-label" htmlFor="salary">Salary floor</label>
                   <input
                     id="salary"
                     type="number"
                     min={0}
-                    className="input"
+                    className="field"
                     value={prefs.salaryFloor ?? ""}
                     onChange={(event) => setPrefs({ ...prefs, salaryFloor: event.target.value ? Number(event.target.value) : null })}
                     placeholder="24000"
                   />
                 </div>
                 <div>
-                  <label className="label" htmlFor="currency">Currency</label>
+                  <label className="field-label" htmlFor="currency">Currency</label>
                   <input
                     id="currency"
-                    className="input"
+                    className="field"
                     value={prefs.currency}
                     onChange={(event) => setPrefs({ ...prefs, currency: event.target.value.toUpperCase() })}
                   />
@@ -455,7 +455,7 @@ export function OnboardingWizard(props: Props) {
               </div>
             </div>
             <div>
-              <label className="label">Seniority levels in scope</label>
+              <label className="field-label">Seniority levels in scope</label>
               <div className="flex flex-wrap gap-1.5">
                 {SENIORITY.map((level) => (
                   <button
@@ -464,18 +464,18 @@ export function OnboardingWizard(props: Props) {
                     onClick={() => togglePref("seniority", level.value)}
                     className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition ${
                       prefs.seniority.includes(level.value)
-                        ? "bg-brand-600 text-white ring-brand-600"
-                        : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
+                        ? "bg-ink text-white ring-ink"
+                        : "bg-surface text-ink-soft ring-line hover:bg-[#fbfaf8]"
                     }`}
                   >
                     {level.label}
                   </button>
                 ))}
-                <span className="self-center text-[11px] text-slate-400">empty = every level</span>
+                <span className="self-center text-[11px] text-muted">empty = every level</span>
               </div>
             </div>
             <div>
-              <label className="label">Job types</label>
+              <label className="field-label">Job types</label>
               <div className="flex flex-wrap gap-1.5">
                 {JOB_TYPES.map((type) => (
                   <button
@@ -483,7 +483,7 @@ export function OnboardingWizard(props: Props) {
                     type="button"
                     onClick={() => togglePref("jobTypes", type)}
                     className={`rounded-full px-3 py-1 text-xs font-medium capitalize ring-1 transition ${
-                      prefs.jobTypes.includes(type) ? "bg-slate-900 text-white ring-slate-900" : "bg-white text-slate-600 ring-slate-200"
+                      prefs.jobTypes.includes(type) ? "bg-ink text-white ring-ink" : "bg-surface text-ink-soft ring-line"
                     }`}
                   >
                     {type}
@@ -492,7 +492,7 @@ export function OnboardingWizard(props: Props) {
               </div>
             </div>
             <div>
-              <label className="label">Excluded keywords</label>
+              <label className="field-label">Excluded keywords</label>
               <ChipInput
                 values={prefs.excludedKeywords}
                 onChange={(excludedKeywords) => setPrefs({ ...prefs, excludedKeywords })}
@@ -505,18 +505,18 @@ export function OnboardingWizard(props: Props) {
         {step === 2 ? (
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-slate-900">Import your base resume</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <h2 className="text-lg font-semibold tracking-tight text-ink">Import your base resume</h2>
+              <p className="mt-1 text-sm text-muted">
                 TXT, Markdown, PDF or DOCX. We extract sections and ask you to confirm each fact before it can be used.
               </p>
             </div>
 
-            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-4 py-8 text-center transition hover:border-brand-400 hover:bg-brand-50/40">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-brand-600 shadow-sm">
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[10px] border border-dashed border-line-strong bg-[#fbfaf8] px-4 py-8 text-center transition hover:border-[#bdb8b0] hover:bg-[#f1eee9]/40">
+              <span className="grid h-10 w-10 place-items-center rounded-[10px] bg-surface text-ink shadow-sm">
                 {parsing ? <Loader2 size={18} className="animate-spin" /> : <FileUp size={18} />}
               </span>
-              <span className="text-sm font-medium text-slate-800">Choose a resume file</span>
-              <span className="text-xs text-slate-500">or paste the text below</span>
+              <span className="text-sm font-medium text-ink">Choose a resume file</span>
+              <span className="text-xs text-muted">or paste the text below</span>
               <input
                 type="file"
                 accept=".txt,.md,.pdf,.docx,text/plain,application/pdf"
@@ -529,7 +529,7 @@ export function OnboardingWizard(props: Props) {
             </label>
 
             <textarea
-              className="input min-h-36 font-mono text-[12px]"
+              className="field min-h-36 font-mono text-[12px]"
               value={resumeText}
               onChange={(event) => setResumeText(event.target.value)}
               placeholder="Paste your resume text here…"
@@ -545,7 +545,7 @@ export function OnboardingWizard(props: Props) {
               ) : null}
             </div>
 
-            {parseError ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{parseError}</p> : null}
+            {parseError ? <p className="rounded-md bg-clay-50 px-3 py-2 text-xs text-clay-700">{parseError}</p> : null}
 
             {facts.length ? (
               <div className="space-y-3">
@@ -553,28 +553,28 @@ export function OnboardingWizard(props: Props) {
                   <p className="section-title">
                     {facts.length} facts detected · review before saving
                   </p>
-                  <span className="badge-brand">
+                  <span className="chip-moss">
                     <ShieldCheck size={11} /> unverified needs your confirmation
                   </span>
                 </div>
                 <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
                   {facts.map((fact, index) => (
-                    <div key={`${fact.factType}-${index}`} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                    <div key={`${fact.factType}-${index}`} className="rounded-[10px] border border-line bg-surface px-3 py-2.5">
                       <div className="flex flex-wrap items-start gap-2">
-                        <span className="badge-neutral capitalize">{fact.factType}</span>
+                        <span className="chip capitalize">{fact.factType}</span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-slate-900">
+                          <p className="text-sm font-medium text-ink">
                             {fact.title || "(untitled)"}
-                            {fact.organization ? <span className="text-slate-500"> · {fact.organization}</span> : null}
+                            {fact.organization ? <span className="text-muted"> · {fact.organization}</span> : null}
                           </p>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="text-[11px] text-muted">
                             {[fact.startDate, fact.endDate ?? (fact.startDate ? "Present" : null)].filter(Boolean).join(" – ")}
                             {fact.bullets.length ? ` · ${fact.bullets.length} bullet${fact.bullets.length === 1 ? "" : "s"}` : ""}
                           </p>
                           {fact.bullets.length ? (
                             <ul className="mt-1 space-y-0.5">
                               {fact.bullets.slice(0, 3).map((bullet, bulletIndex) => (
-                                <li key={bulletIndex} className="truncate text-[11px] text-slate-500">
+                                <li key={bulletIndex} className="truncate text-[11px] text-muted">
                                   • {bullet}
                                 </li>
                               ))}
@@ -582,7 +582,7 @@ export function OnboardingWizard(props: Props) {
                           ) : null}
                         </div>
                         <div className="flex flex-col items-end gap-1.5">
-                          <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600">
+                          <label className="flex items-center gap-1.5 text-[11px] font-medium text-ink-soft">
                             <input
                               type="checkbox"
                               checked={fact.verificationStatus === "verified"}
@@ -598,7 +598,7 @@ export function OnboardingWizard(props: Props) {
                           </label>
                           {fact.factType === "skill" ? (
                             <select
-                              className="rounded border border-slate-200 px-1.5 py-1 text-[11px]"
+                              className="rounded border border-line px-1.5 py-1 text-[11px]"
                               value={fact.state}
                               onChange={(event) =>
                                 setFacts((current) =>
@@ -621,7 +621,7 @@ export function OnboardingWizard(props: Props) {
                     {saving ? <Loader2 size={14} className="animate-spin" /> : <BadgeCheck size={14} />}
                     {imported ? "Facts saved" : "Save confirmed facts"}
                   </button>
-                  <span className="text-[11px] text-slate-500">
+                  <span className="text-[11px] text-muted">
                     Only verified facts can appear in a tailored resume. Learning skills are labelled, never upgraded.
                   </span>
                 </div>
@@ -633,32 +633,32 @@ export function OnboardingWizard(props: Props) {
         {step === 3 ? (
           <div className="space-y-5">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-slate-900">When should we search?</h2>
-              <p className="mt-1 text-sm text-slate-500">Schedules are timezone-aware and idempotent — one run per window.</p>
+              <h2 className="text-lg font-semibold tracking-tight text-ink">When should we search?</h2>
+              <p className="mt-1 text-sm text-muted">Schedules are timezone-aware and idempotent — one run per window.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="label" htmlFor="time">Daily search time</label>
+                <label className="field-label" htmlFor="time">Daily search time</label>
                 <input
                   id="time"
                   type="time"
-                  className="input"
+                  className="field"
                   value={prefs.searchTime}
                   onChange={(event) => setPrefs({ ...prefs, searchTime: event.target.value })}
                 />
               </div>
               <div>
-                <label className="label" htmlFor="tzone">Time zone</label>
+                <label className="field-label" htmlFor="tzone">Time zone</label>
                 <input
                   id="tzone"
-                  className="input"
+                  className="field"
                   value={prefs.timezone}
                   onChange={(event) => setPrefs({ ...prefs, timezone: event.target.value })}
                 />
               </div>
             </div>
             <div>
-              <label className="label">Days of the week</label>
+              <label className="field-label">Days of the week</label>
               <div className="flex gap-1.5">
                 {DAYS.map((day, index) => (
                   <button
@@ -672,8 +672,8 @@ export function OnboardingWizard(props: Props) {
                           : [...prefs.daysOfWeek, index].sort(),
                       })
                     }
-                    className={`grid h-8 w-8 place-items-center rounded-lg text-xs font-semibold ring-1 transition ${
-                      prefs.daysOfWeek.includes(index) ? "bg-brand-600 text-white ring-brand-600" : "bg-white text-slate-500 ring-slate-200"
+                    className={`grid h-8 w-8 place-items-center rounded-md text-xs font-semibold ring-1 transition ${
+                      prefs.daysOfWeek.includes(index) ? "bg-ink text-white ring-ink" : "bg-surface text-muted ring-line"
                     }`}
                     aria-label={`Day ${index + 1}`}
                   >
@@ -683,10 +683,10 @@ export function OnboardingWizard(props: Props) {
               </div>
             </div>
             <div>
-              <label className="label">Approved sources</label>
+              <label className="field-label">Approved sources</label>
               <div className="space-y-1.5">
                 {props.sources.map((source) => (
-                  <label key={source.id} className="flex items-start gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <label key={source.id} className="flex items-start gap-2 rounded-md border border-line px-3 py-2 text-sm">
                     <input
                       type="checkbox"
                       className="mt-0.5"
@@ -701,15 +701,15 @@ export function OnboardingWizard(props: Props) {
                       }
                     />
                     <span>
-                      <span className="font-medium text-slate-800">{source.name}</span>
-                      <span className="block text-[11px] text-slate-500">{source.accessMethod} · terms reviewed</span>
+                      <span className="font-medium text-ink">{source.name}</span>
+                      <span className="block text-[11px] text-muted">{source.accessMethod} · terms reviewed</span>
                     </span>
                   </label>
                 ))}
               </div>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
+              <label className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
                 <input
                   type="checkbox"
                   checked={prefs.notifyInApp}
@@ -717,7 +717,7 @@ export function OnboardingWizard(props: Props) {
                 />
                 In-app digest
               </label>
-              <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
+              <label className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
                 <input
                   type="checkbox"
                   checked={prefs.notifyEmail}
@@ -726,7 +726,7 @@ export function OnboardingWizard(props: Props) {
                 Email digest (opt-in)
               </label>
             </div>
-            <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
+            <label className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm">
               <input
                 type="checkbox"
                 checked={prefs.scheduleEnabled}
@@ -737,9 +737,9 @@ export function OnboardingWizard(props: Props) {
           </div>
         ) : null}
 
-        {error ? <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
+        {error ? <p className="mt-4 rounded-md bg-clay-50 px-3 py-2 text-xs text-clay-700">{error}</p> : null}
 
-        <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+        <div className="mt-6 flex items-center justify-between border-t border-line pt-4">
           <button type="button" className="btn-ghost" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0}>
             <ArrowLeft size={14} /> Back
           </button>
@@ -751,7 +751,7 @@ export function OnboardingWizard(props: Props) {
         </div>
       </div>
 
-      <p className="mt-4 text-center text-[11px] text-slate-400">
+      <p className="mt-4 text-center text-[11px] text-muted">
         You can pause automation, change sources, or delete everything from Settings at any time.
       </p>
     </div>

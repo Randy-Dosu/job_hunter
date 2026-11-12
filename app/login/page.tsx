@@ -1,56 +1,67 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { LoginForm } from "@/components/auth-forms";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ mode?: string; q?: string }> }) {
   const user = await getSessionUser();
   if (user) redirect("/dashboard");
-  const { mode } = await searchParams;
+  const { mode, q } = await searchParams;
 
   return (
-    <div className="mx-auto grid min-h-screen max-w-5xl items-center gap-10 px-5 py-10 lg:grid-cols-2">
-      <div>
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800">
-          <ArrowLeft size={13} /> Back to overview
-        </Link>
-        <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-900">Your job hunt, with a paper trail.</h1>
-        <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-          Sign in to run today&apos;s search, review explainable matches, tailor a grounded resume, and approve — or
-          reject — each application individually.
-        </p>
+    <div className="min-h-screen">
+      <header className="border-b border-line">
+        <div className="mx-auto flex h-14 max-w-6xl items-center px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-[6px] bg-ink text-[10px] font-bold text-white">jh</span>
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink">job hunter</span>
+          </Link>
+          <span className="ml-auto text-[12px] text-muted">
+            New here?{" "}
+            <Link href="/login?mode=signup" className="font-medium text-ink hover:underline">
+              Create an account
+            </Link>
+          </span>
+        </div>
+      </header>
 
-        <ul className="mt-7 space-y-3 text-sm text-slate-600">
-          {[
-            "Approval is bound to a specific vacancy and package version",
-            "Every resume line links back to verified evidence",
-            "You choose which sources are allowed to run",
-          ].map((item) => (
-            <li key={item} className="flex items-start gap-2">
-              <ShieldCheck size={15} className="mt-0.5 shrink-0 text-emerald-600" />
-              {item}
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white/70 px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Demo account</p>
-          <p className="mt-1 text-sm text-slate-700">
-            <span className="font-medium">demo@jobhunter.app</span> · <span className="font-medium">hunter1234</span>
+      <div className="mx-auto grid max-w-5xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:py-16">
+        <div className="max-w-md">
+          <h1 className="text-[30px] font-semibold leading-[1.15] tracking-[-0.03em] text-ink">Sign in to your job hunt.</h1>
+          <p className="mt-3 text-[13.5px] leading-relaxed text-ink-soft">
+            {q ? (
+              <>
+                Continue searching for <span className="font-medium text-ink">“{q}”</span> — your saved market, filters and verified
+                profile are waiting inside.
+              </>
+            ) : (
+              "Your searches, verified facts, tailored resumes and approvals all live in one place, with a full audit trail."
+            )}
           </p>
-          <p className="mt-1 text-[11px] text-slate-400">
-            Seeded with a verified early-career profile, three reviewed sources and a scheduled daily search.
+
+          <dl className="mt-8 space-y-4 border-t border-line pt-6">
+            {[
+              ["Approval is per vacancy", "Approval is bound to one job and one exact package hash. Edit anything and it expires."],
+              ["Every claim is traceable", "Resume lines link back to verified profile facts, never to a model's imagination."],
+              ["You choose the sources", "Three reviewed public sources today. Disable any of them at any time."],
+            ].map(([title, body]) => (
+              <div key={title}>
+                <dt className="text-[12.5px] font-semibold text-ink">{title}</dt>
+                <dd className="mt-0.5 text-[12.5px] leading-relaxed text-muted">{body}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div>
+          <div className="rounded-[10px] border border-line bg-surface p-5">
+            <LoginForm mode={mode === "signup" ? "signup" : "login"} />
+          </div>
+          <p className="mt-3 text-[11.5px] leading-relaxed text-muted">
+            Generated material is yours to review. Job Hunter never submits an application, and never contacts an employer on your
+            behalf.
           </p>
         </div>
-      </div>
-
-      <div className="w-full">
-        <LoginForm mode={mode === "signup" ? "signup" : "login"} />
-        <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-400">
-          By continuing you agree that generated material must be reviewed before you send it. Job Hunter never submits an
-          application on its own.
-        </p>
       </div>
     </div>
   );

@@ -38,7 +38,7 @@ export function TailorResumeButton({ jobId, existingResumeId }: { jobId: string;
         {loading ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
         {loading ? "Building from verified facts…" : "Tailor a resume"}
       </button>
-      {error ? <p className="mt-1 max-w-xs text-[11px] text-rose-600">{error}</p> : null}
+      {error ? <p className="mt-1 max-w-xs text-[11px] text-clay-700">{error}</p> : null}
     </div>
   );
 }
@@ -67,11 +67,11 @@ export function FeedbackButtons({ jobId, current }: { jobId: string; current: st
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[11px] text-slate-500">Was this relevant?</span>
+      <span className="text-[11px] text-muted">Was this relevant?</span>
       <button
         type="button"
         onClick={() => send("relevant")}
-        className={`btn-sm btn ${value === "relevant" ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "btn-ghost"}`}
+        className={`btn-sm btn ${value === "relevant" ? "bg-moss-50 text-moss-700 ring-1 ring-moss-100" : "btn-ghost"}`}
         aria-pressed={value === "relevant"}
       >
         {loading === "relevant" ? <Loader2 size={12} className="animate-spin" /> : <ThumbsUp size={12} />} Yes
@@ -79,7 +79,7 @@ export function FeedbackButtons({ jobId, current }: { jobId: string; current: st
       <button
         type="button"
         onClick={() => send("not_relevant")}
-        className={`btn-sm btn ${value === "not_relevant" ? "bg-rose-50 text-rose-700 ring-1 ring-rose-200" : "btn-ghost"}`}
+        className={`btn-sm btn ${value === "not_relevant" ? "bg-clay-50 text-clay-700 ring-1 ring-clay-100" : "btn-ghost"}`}
         aria-pressed={value === "not_relevant"}
       >
         {loading === "not_relevant" ? <Loader2 size={12} className="animate-spin" /> : <ThumbsDown size={12} />} No
@@ -87,13 +87,13 @@ export function FeedbackButtons({ jobId, current }: { jobId: string; current: st
       <button
         type="button"
         onClick={() => send("dismissed")}
-        className={`btn-sm btn ${value === "dismissed" ? "bg-slate-100 text-slate-700" : "btn-ghost"}`}
+        className={`btn-sm btn ${value === "dismissed" ? "bg-[#f1eee9] text-ink-soft" : "btn-ghost"}`}
         aria-pressed={value === "dismissed"}
       >
         {loading === "dismissed" ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />} Dismiss
       </button>
       {value === "relevant" ? (
-        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600">
+        <span className="inline-flex items-center gap-1 text-[11px] text-moss-600">
           <CheckCircle2 size={11} /> saved
         </span>
       ) : null}

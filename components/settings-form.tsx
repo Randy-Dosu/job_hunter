@@ -23,18 +23,18 @@ function Chips({ values, onChange, placeholder }: { values: string[]; onChange: 
     <div>
       <div className="mb-1.5 flex flex-wrap gap-1.5">
         {values.map((value) => (
-          <span key={value} className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-700 ring-1 ring-brand-600/10">
+          <span key={value} className="inline-flex items-center gap-1 rounded-full bg-[#f1eee9] px-2.5 py-1 text-[11px] font-medium text-ink ring-1 ring-line">
             {value}
             <button type="button" onClick={() => onChange(values.filter((item) => item !== value))} aria-label={`Remove ${value}`}>
               <X size={10} />
             </button>
           </span>
         ))}
-        {!values.length ? <span className="text-[11px] text-slate-400">None</span> : null}
+        {!values.length ? <span className="text-[11px] text-muted">None</span> : null}
       </div>
       <div className="flex gap-1.5">
         <input
-          className="input text-xs"
+          className="field text-xs"
           value={draft}
           placeholder={placeholder}
           onChange={(event) => setDraft(event.target.value)}
@@ -171,26 +171,26 @@ export function SettingsForm({
   return (
     <div className="space-y-5">
       <section id="market" className="card card-pad">
-        <h2 className="text-sm font-semibold text-slate-900">Market &amp; role preferences</h2>
-        <p className="mt-0.5 text-xs text-slate-500">Changes apply to the next search. Existing matches keep their stored reasoning.</p>
+        <h2 className="text-sm font-semibold text-ink">Market &amp; role preferences</h2>
+        <p className="mt-0.5 text-xs text-muted">Changes apply to the next search. Existing matches keep their stored reasoning.</p>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="label">Target titles</label>
+            <label className="field-label">Target titles</label>
             <Chips values={prefs.roleTitles} onChange={(roleTitles) => setPrefs({ ...prefs, roleTitles })} placeholder="Software Engineer…" />
           </div>
           <div>
-            <label className="label">Countries</label>
+            <label className="field-label">Countries</label>
             <Chips values={prefs.countries} onChange={(countries) => setPrefs({ ...prefs, countries })} placeholder="Ghana…" />
           </div>
           <div>
-            <label className="label">Remote regions</label>
+            <label className="field-label">Remote regions</label>
             <Chips values={prefs.remoteRegions} onChange={(remoteRegions) => setPrefs({ ...prefs, remoteRegions })} placeholder="Worldwide…" />
           </div>
           <div>
-            <label className="label">Remote preference</label>
+            <label className="field-label">Remote preference</label>
             <select
-              className="input text-xs"
+              className="field text-xs"
               value={prefs.remotePreference}
               onChange={(event) => setPrefs({ ...prefs, remotePreference: event.target.value })}
             >
@@ -201,7 +201,7 @@ export function SettingsForm({
             </select>
           </div>
           <div>
-            <label className="label">Excluded employers</label>
+            <label className="field-label">Excluded employers</label>
             <Chips
               values={prefs.excludedEmployers}
               onChange={(excludedEmployers) => setPrefs({ ...prefs, excludedEmployers })}
@@ -209,11 +209,11 @@ export function SettingsForm({
             />
           </div>
           <div>
-            <label className="label">Excluded keywords</label>
+            <label className="field-label">Excluded keywords</label>
             <Chips values={prefs.excludedKeywords} onChange={(excludedKeywords) => setPrefs({ ...prefs, excludedKeywords })} placeholder="unpaid…" />
           </div>
           <div>
-            <label className="label">Excluded locations</label>
+            <label className="field-label">Excluded locations</label>
             <Chips
               values={prefs.excludedLocations}
               onChange={(excludedLocations) => setPrefs({ ...prefs, excludedLocations })}
@@ -222,19 +222,19 @@ export function SettingsForm({
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="label">Salary floor</label>
+              <label className="field-label">Salary floor</label>
               <input
                 type="number"
                 min={0}
-                className="input text-xs"
+                className="field text-xs"
                 value={prefs.salaryFloor ?? ""}
                 onChange={(event) => setPrefs({ ...prefs, salaryFloor: event.target.value ? Number(event.target.value) : null })}
               />
             </div>
             <div>
-              <label className="label">Currency</label>
+              <label className="field-label">Currency</label>
               <input
-                className="input text-xs"
+                className="field text-xs"
                 value={prefs.currency}
                 onChange={(event) => setPrefs({ ...prefs, currency: event.target.value.toUpperCase() })}
               />
@@ -246,16 +246,16 @@ export function SettingsForm({
           <button type="button" className="btn-primary btn-sm" onClick={() => save("market")} disabled={busy === "market"}>
             {busy === "market" ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save preferences
           </button>
-          {message ? <span className="text-[11px] text-emerald-700">{message}</span> : null}
-          {error ? <span className="text-[11px] text-rose-600">{error}</span> : null}
+          {message ? <span className="text-[11px] text-moss-700">{message}</span> : null}
+          {error ? <span className="text-[11px] text-clay-700">{error}</span> : null}
         </div>
       </section>
 
       <section id="schedule" className="card card-pad">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Daily schedule</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Timezone-aware, one run per scheduled window. Pause any time.</p>
+            <h2 className="text-sm font-semibold text-ink">Daily schedule</h2>
+            <p className="mt-0.5 text-xs text-muted">Timezone-aware, one run per scheduled window. Pause any time.</p>
           </div>
           <button
             type="button"
@@ -268,30 +268,30 @@ export function SettingsForm({
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <div>
-            <label className="label" htmlFor="search-time">
+            <label className="field-label" htmlFor="search-time">
               Search time
             </label>
             <input
               id="search-time"
               type="time"
-              className="input text-xs"
+              className="field text-xs"
               value={prefs.searchTime}
               onChange={(event) => setPrefs({ ...prefs, searchTime: event.target.value })}
             />
           </div>
           <div>
-            <label className="label" htmlFor="settings-tz">
+            <label className="field-label" htmlFor="settings-tz">
               Time zone
             </label>
             <input
               id="settings-tz"
-              className="input text-xs"
+              className="field text-xs"
               value={prefs.timezone}
               onChange={(event) => setPrefs({ ...prefs, timezone: event.target.value })}
             />
           </div>
           <div>
-            <label className="label">Days</label>
+            <label className="field-label">Days</label>
             <div className="flex gap-1">
               {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
                 <button
@@ -306,7 +306,7 @@ export function SettingsForm({
                     })
                   }
                   className={`grid h-7 w-7 place-items-center rounded-md text-[11px] font-semibold ring-1 ${
-                    prefs.daysOfWeek.includes(index) ? "bg-brand-600 text-white ring-brand-600" : "bg-white text-slate-500 ring-slate-200"
+                    prefs.daysOfWeek.includes(index) ? "bg-ink text-white ring-ink" : "bg-surface text-muted ring-line"
                   }`}
                   aria-label={`Toggle day ${index + 1}`}
                 >
@@ -316,7 +316,7 @@ export function SettingsForm({
             </div>
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-600">
+        <div className="mt-3 flex flex-wrap gap-4 text-xs text-ink-soft">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={prefs.notifyInApp} onChange={(event) => setPrefs({ ...prefs, notifyInApp: event.target.checked })} />
             In-app digest
@@ -334,27 +334,27 @@ export function SettingsForm({
       </section>
 
       <section id="sources" className="card card-pad">
-        <h2 className="text-sm font-semibold text-slate-900">Approved sources</h2>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <h2 className="text-sm font-semibold text-ink">Approved sources</h2>
+        <p className="mt-0.5 text-xs text-muted">
           Each adapter documents its access method and terms review. Disabling one takes effect on the next run.
         </p>
         <div className="mt-3 space-y-2">
           {sources.map((source) => (
-            <div key={source.id} className="rounded-xl border border-slate-200 px-3 py-2.5">
+            <div key={source.id} className="rounded-[10px] border border-line px-3 py-2.5">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-ink">
                     {source.name}
-                    <span className="ml-1.5 text-[10px] font-normal text-slate-400">{source.supportedMarkets}</span>
+                    <span className="ml-1.5 text-[10px] font-normal text-muted">{source.supportedMarkets}</span>
                   </p>
-                  <p className="text-[11px] text-slate-500">{source.accessMethod}</p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[11px] text-muted">{source.accessMethod}</p>
+                  <p className="text-[10px] text-muted">
                     Terms reviewed {source.termsReviewedAt ? new Date(source.termsReviewedAt).toLocaleDateString("en-GB") : "—"} · last run{" "}
                     {source.lastRunAt ? new Date(source.lastRunAt).toLocaleString("en-GB") : "never"}
                     {source.lastStatus ? ` · ${source.lastStatus}` : ""}
                   </p>
                 </div>
-                <label className="flex items-center gap-2 text-[11px] font-medium text-slate-600">
+                <label className="flex items-center gap-2 text-[11px] font-medium text-ink-soft">
                   <input
                     type="checkbox"
                     checked={enabled.includes(source.id)}
@@ -364,65 +364,65 @@ export function SettingsForm({
                   Enabled
                 </label>
               </div>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{source.notes}</p>
+              <p className="mt-1.5 text-[10px] leading-relaxed text-muted">{source.notes}</p>
             </div>
           ))}
         </div>
-        <p className="mt-2 text-[10px] text-slate-400">
+        <p className="mt-2 text-[10px] text-muted">
           We never bypass logins, CAPTCHAs or rate limits. A source that blocks automated access is disabled, not worked around.
         </p>
       </section>
 
       <section className="card card-pad">
-        <h2 className="text-sm font-semibold text-slate-900">Profile</h2>
+        <h2 className="text-sm font-semibold text-ink">Profile</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="label" htmlFor="set-headline">
+            <label className="field-label" htmlFor="set-headline">
               Headline
             </label>
             <input
               id="set-headline"
-              className="input text-xs"
+              className="field text-xs"
               value={profile.headline}
               onChange={(event) => setProfile({ ...profile, headline: event.target.value })}
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="label" htmlFor="set-summary">
+            <label className="field-label" htmlFor="set-summary">
               Summary
             </label>
             <textarea
               id="set-summary"
-              className="input min-h-20 text-xs"
+              className="field min-h-20 text-xs"
               value={profile.summary}
               onChange={(event) => setProfile({ ...profile, summary: event.target.value })}
             />
           </div>
           <div>
-            <label className="label" htmlFor="set-location">
+            <label className="field-label" htmlFor="set-location">
               Location
             </label>
             <input
               id="set-location"
-              className="input text-xs"
+              className="field text-xs"
               value={profile.location}
               onChange={(event) => setProfile({ ...profile, location: event.target.value })}
             />
           </div>
           <div>
-            <label className="label" htmlFor="set-auth">
+            <label className="field-label" htmlFor="set-auth">
               Work authorization
             </label>
             <input
               id="set-auth"
-              className="input text-xs"
+              className="field text-xs"
               value={profile.workAuthorization}
               onChange={(event) => setProfile({ ...profile, workAuthorization: event.target.value })}
             />
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2">
-          <label className="flex items-center gap-2 text-[11px] text-slate-600">
+          <label className="flex items-center gap-2 text-[11px] text-ink-soft">
             <input
               type="checkbox"
               checked={profile.needsSponsorship}
@@ -437,8 +437,8 @@ export function SettingsForm({
       </section>
 
       <section id="privacy" className="card card-pad">
-        <h2 className="text-sm font-semibold text-slate-900">Privacy &amp; data</h2>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <h2 className="text-sm font-semibold text-ink">Privacy &amp; data</h2>
+        <p className="mt-0.5 text-xs text-muted">
           Export everything we hold, or delete your account and all associated records. Resumes contain personal data, so we never
           share them between accounts.
         </p>
@@ -448,16 +448,16 @@ export function SettingsForm({
           </a>
         </div>
 
-        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50/50 p-3">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-rose-800">
+        <div className="mt-4 rounded-[10px] border border-clay-100 bg-clay-50/50 p-3">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-clay-700">
             <ShieldAlert size={13} /> Delete account
           </p>
-          <p className="mt-1 text-[11px] leading-relaxed text-rose-800/80">
+          <p className="mt-1 text-[11px] leading-relaxed text-clay-700/80">
             This removes your profile, facts, resumes, matches, packages, approvals and audit trail. It cannot be undone.
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <input
-              className="input max-w-40 text-xs"
+              className="field max-w-40 text-xs"
               placeholder="Type DELETE"
               value={deleteConfirm}
               onChange={(event) => setDeleteConfirm(event.target.value)}

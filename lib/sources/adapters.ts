@@ -55,6 +55,11 @@ abstract class BaseAdapter implements JobSourceAdapter {
   protected abstract parse(payload: unknown): NormalizedJob[];
   protected abstract fixture: unknown;
 
+  /** Exposed for the public landing preview and tests: parse the saved fixture. */
+  parseFixturePayload(): NormalizedJob[] {
+    return withDeadlines(this.parse(this.fixture));
+  }
+
   async search(criteria: SearchCriteria): Promise<FetchOutcome> {
     try {
       const payload = await fetchJson(this.endpoint);
@@ -199,4 +204,13 @@ export const adapters: JobSourceAdapter[] = [
 
 export function getAdapter(slug: string): JobSourceAdapter | undefined {
   return adapters.find((adapter) => adapter.slug === slug);
+}
+
+/** Normalized fixture listings, used for the logged-out preview when the store is empty. */
+export function fixturePreview(limit = 6): NormalizedJob[] {
+  return adapters
+    .flatMap((adapter) => (adapter as unknown as { parseFixturePayload: () => NormalizedJob[] }).parseFixturePayload())
+    .filter((job) => job.title && job.company)
+    .sort((a, b) => new Date(b.postedAt ?? 0).getTime() - new Date(a.postedAt ?? 0).getTime())
+    .slice(0, limit);
 }

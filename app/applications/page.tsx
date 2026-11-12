@@ -48,28 +48,38 @@ export default async function ApplicationsPage() {
   return (
     <AppShell>
       <PageHeader
-        eyebrow="Tracking"
-        title="Application tracker"
-        description="A record of what you prepared, what you sent, and what happened next. Manual outcomes are always allowed."
+        title="Tracker"
+        description="What you prepared, what you sent, and what happened next. You always control the record."
+        meta={
+          <>
+            <span>{applications.length} applications</span>
+            <span className="text-line-strong">/</span>
+            <span className="text-muted">manual outcomes allowed at every stage</span>
+          </>
+        }
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-3 divide-x divide-line rounded-[10px] border border-line bg-surface py-3">
         <Stat label="Active" value={counts.active} hint="Submitted or interviewing" />
         <Stat label="Awaiting you" value={counts.awaiting} hint="Finish on the employer site" />
         <Stat label="In preparation" value={counts.preparing} hint="Approved, not yet sent" />
       </div>
 
-      <div className="mt-6 space-y-6">
-        {GROUPS.map((group) => {
-          const rows = applications.filter((app) => group.key.includes(app.status));
-          return (
-            <section key={group.label}>
-              <div className="mb-2 flex items-baseline justify-between">
-                <h2 className="text-sm font-semibold text-slate-900">{group.label}</h2>
-                <p className="text-[11px] text-slate-500">{group.hint}</p>
-              </div>
-              {rows.length ? (
-                <div className="space-y-2.5">
+      {applications.length ? (
+        <div className="space-y-6">
+          {GROUPS.map((group) => {
+            const rows = applications.filter((app) => group.key.includes(app.status));
+            if (!rows.length) return null;
+            return (
+              <section key={group.label}>
+                <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <h2 className="text-[13px] font-semibold text-ink">
+                    {group.label}
+                    <span className="ml-1.5 font-normal text-muted">{rows.length}</span>
+                  </h2>
+                  <p className="text-[11px] text-muted">{group.hint}</p>
+                </div>
+                <div className="overflow-hidden rounded-[10px] border border-line bg-surface">
                   {rows.map((app) => (
                     <ApplicationRow
                       key={app.id}
@@ -89,32 +99,24 @@ export default async function ApplicationsPage() {
                     />
                   ))}
                 </div>
-              ) : (
-                <p className="rounded-xl border border-dashed border-slate-300 px-4 py-5 text-xs text-slate-500">
-                  Nothing here yet.
-                </p>
-              )}
-            </section>
-          );
-        })}
-      </div>
-
-      {!applications.length ? (
-        <div className="mt-6">
-          <EmptyState
-            icon={<KanbanSquare size={20} />}
-            title="No applications yet"
-            description="Approving a package creates a tracker entry. Nothing is logged as submitted until you confirm it happened."
-            action={{ href: "/jobs", label: "Browse matches" }}
-          />
+              </section>
+            );
+          })}
         </div>
-      ) : null}
+      ) : (
+        <EmptyState
+          icon={<KanbanSquare size={16} />}
+          title="No applications yet"
+          description="Approving a package creates a tracker entry here. Nothing is logged as submitted until you confirm it happened."
+          action={{ href: "/jobs", label: "Browse matches" }}
+        />
+      )}
 
-      <section className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white/60 px-4 py-3 text-xs text-slate-500">
+      <section className="mt-7 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-line bg-[#fbfaf8] px-4 py-3 text-[11.5px] text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <CalendarClock size={13} /> Reminders are opt-in. Set a next action on any application to keep it visible.
+          <CalendarClock size={13} /> Reminders are opt-in — set a next action on any application to keep it visible.
         </span>
-        <Link href="/settings" className="font-semibold text-brand-600 hover:underline">
+        <Link href="/settings#notifications" className="font-medium text-ink hover:underline">
           Notification settings
         </Link>
       </section>

@@ -28,9 +28,9 @@ type Fact = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  verified: "badge-strong",
-  unverified: "badge-possible",
-  outdated: "badge-low",
+  verified: "chip-moss",
+  unverified: "chip-warn",
+  outdated: "chip",
 };
 
 export function ResumeUpload({ compact = false }: { compact?: boolean }) {
@@ -93,7 +93,7 @@ export function ResumeUpload({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className={compact ? "" : "space-y-3"}>
-      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-4 py-4 text-center text-xs font-medium text-slate-600 transition hover:border-brand-400 hover:bg-brand-50/40">
+      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-dashed border-line-strong bg-[#fbfaf8] px-4 py-4 text-center text-xs font-medium text-ink-soft transition hover:border-[#bdb8b0] hover:bg-[#f1eee9]/40">
         {loading ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
         Upload a new base resume version (TXT, MD, PDF, DOCX)
         <input
@@ -106,14 +106,14 @@ export function ResumeUpload({ compact = false }: { compact?: boolean }) {
           }}
         />
       </label>
-      {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
+      {error ? <p className="rounded-md bg-clay-50 px-3 py-2 text-xs text-clay-700">{error}</p> : null}
       {preview ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
-          <p className="text-xs font-semibold text-slate-800">
+        <div className="rounded-[10px] border border-line bg-surface p-3">
+          <p className="text-xs font-semibold text-ink">
             Extracted {preview.facts.length} facts — imported as unverified until you confirm them.
           </p>
           {preview.warnings.length ? (
-            <ul className="mt-1 space-y-0.5 text-[11px] text-amber-700">
+            <ul className="mt-1 space-y-0.5 text-[11px] text-[#8a5a06]">
               {preview.warnings.slice(0, 4).map((warning) => (
                 <li key={warning}>• {warning}</li>
               ))}
@@ -208,8 +208,8 @@ export function FactEditor({ facts }: { facts: Fact[] }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs text-slate-500">
-          Only <span className="font-semibold text-emerald-700">verified</span> facts can be used in a tailored resume.
+        <p className="text-xs text-muted">
+          Only <span className="font-semibold text-moss-700">verified</span> facts can be used in a tailored resume.
         </p>
         <button type="button" className="btn-secondary btn-sm" onClick={() => setAdding((current) => !current)}>
           <Plus size={12} /> Add fact
@@ -217,9 +217,9 @@ export function FactEditor({ facts }: { facts: Fact[] }) {
       </div>
 
       {adding ? (
-        <div className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
+        <div className="mb-3 rounded-[10px] border border-line bg-surface p-3">
           <div className="grid gap-2 sm:grid-cols-2">
-            <select className="input text-xs" value={form.factType} onChange={(event) => setForm({ ...form, factType: event.target.value })}>
+            <select className="field text-xs" value={form.factType} onChange={(event) => setForm({ ...form, factType: event.target.value })}>
               <option value="experience">Experience</option>
               <option value="education">Education</option>
               <option value="skill">Skill</option>
@@ -227,26 +227,26 @@ export function FactEditor({ facts }: { facts: Fact[] }) {
               <option value="achievement">Achievement</option>
             </select>
             <input
-              className="input text-xs"
+              className="field text-xs"
               placeholder="Title (e.g. Frontend Developer)"
               value={form.title}
               onChange={(event) => setForm({ ...form, title: event.target.value })}
             />
             <input
-              className="input text-xs"
+              className="field text-xs"
               placeholder="Organisation"
               value={form.organization}
               onChange={(event) => setForm({ ...form, organization: event.target.value })}
             />
             <div className="grid grid-cols-2 gap-2">
               <input
-                className="input text-xs"
+                className="field text-xs"
                 placeholder="Start (2024-09)"
                 value={form.startDate}
                 onChange={(event) => setForm({ ...form, startDate: event.target.value })}
               />
               <input
-                className="input text-xs"
+                className="field text-xs"
                 placeholder="End (blank = now)"
                 value={form.endDate}
                 onChange={(event) => setForm({ ...form, endDate: event.target.value })}
@@ -254,7 +254,7 @@ export function FactEditor({ facts }: { facts: Fact[] }) {
             </div>
           </div>
           <textarea
-            className="input mt-2 min-h-20 text-xs"
+            className="field mt-2 min-h-20 text-xs"
             placeholder="One achievement per line. Only add things that actually happened."
             value={form.bullets}
             onChange={(event) => setForm({ ...form, bullets: event.target.value })}
@@ -270,38 +270,38 @@ export function FactEditor({ facts }: { facts: Fact[] }) {
         </div>
       ) : null}
 
-      {error ? <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
+      {error ? <p className="mb-2 rounded-md bg-clay-50 px-3 py-2 text-xs text-clay-700">{error}</p> : null}
 
       <div className="space-y-2">
         {facts.map((fact) => {
           const bullets: string[] = JSON.parse(fact.bullets_json || "[]");
           return (
-            <div key={fact.id} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+            <div key={fact.id} className="rounded-[10px] border border-line bg-surface px-3 py-2.5">
               <div className="flex flex-wrap items-start gap-2">
-                <span className="badge-neutral capitalize">{fact.fact_type}</span>
-                {fact.fact_type === "skill" && fact.state === "learning" ? <span className="badge-possible">learning only</span> : null}
+                <span className="chip capitalize">{fact.fact_type}</span>
+                {fact.fact_type === "skill" && fact.state === "learning" ? <span className="chip-warn">learning only</span> : null}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-ink">
                     {fact.title}
-                    {fact.organization ? <span className="font-normal text-slate-500"> · {fact.organization}</span> : null}
+                    {fact.organization ? <span className="font-normal text-muted"> · {fact.organization}</span> : null}
                   </p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-muted">
                     {[fact.start_date, fact.end_date ?? (fact.start_date ? "Present" : null)].filter(Boolean).join(" – ")}
                     {fact.location ? ` · ${fact.location}` : ""}
                   </p>
                   {bullets.length ? (
                     <ul className="mt-1 space-y-0.5">
                       {bullets.map((bullet, index) => (
-                        <li key={index} className="text-[11px] leading-relaxed text-slate-500">
+                        <li key={index} className="text-[11px] leading-relaxed text-muted">
                           • {bullet}
                         </li>
                       ))}
                     </ul>
                   ) : null}
-                  <p className="mt-1 text-[10px] italic text-slate-400">{fact.evidence_note}</p>
+                  <p className="mt-1 text-[10px] italic text-muted">{fact.evidence_note}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
-                  <span className={STATUS_STYLES[fact.verification_status] ?? "badge-neutral"}>
+                  <span className={STATUS_STYLES[fact.verification_status] ?? "chip"}>
                     {fact.verification_status === "verified" ? (
                       <BadgeCheck size={10} />
                     ) : fact.verification_status === "outdated" ? (
@@ -336,7 +336,7 @@ export function FactEditor({ facts }: { facts: Fact[] }) {
                     ) : null}
                     <button
                       type="button"
-                      className="btn-ghost btn-sm px-1.5 py-1 text-rose-500 hover:bg-rose-50"
+                      className="btn-ghost btn-sm px-1.5 py-1 text-clay-500 hover:bg-clay-50"
                       onClick={() => remove(fact)}
                       disabled={busy === fact.id}
                       title="Delete fact"
@@ -350,8 +350,8 @@ export function FactEditor({ facts }: { facts: Fact[] }) {
           );
         })}
         {!facts.length ? (
-          <div className="rounded-xl border border-dashed border-slate-300 px-4 py-8 text-center text-xs text-slate-500">
-            <CircleSlash size={16} className="mx-auto mb-1.5 text-slate-400" />
+          <div className="rounded-[10px] border border-dashed border-line-strong px-4 py-8 text-center text-xs text-muted">
+            <CircleSlash size={16} className="mx-auto mb-1.5 text-muted" />
             No profile facts yet. Import a resume or add one manually.
           </div>
         ) : null}

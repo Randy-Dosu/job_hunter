@@ -2,37 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Briefcase,
-  FileText,
-  ShieldCheck,
-  KanbanSquare,
-  Settings,
-  Sparkles,
-} from "lucide-react";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jobs", label: "Job feed", icon: Briefcase },
-  { href: "/resume", label: "Resume & facts", icon: FileText },
-  { href: "/approvals", label: "Approval centre", icon: ShieldCheck },
-  { href: "/applications", label: "Tracker", icon: KanbanSquare },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/jobs", label: "Jobs" },
+  { href: "/dashboard", label: "Overview" },
+  { href: "/resume", label: "Resume" },
+  { href: "/applications", label: "Applications" },
+  { href: "/approvals", label: "Approvals" },
 ];
 
-export function SidebarNav({ pendingApprovals }: { pendingApprovals: number }) {
+export function Brand({ href = "/" }: { href?: string }) {
+  return (
+    <Link href={href} className="flex shrink-0 items-center gap-2" aria-label="Job Hunter home">
+      <span className="grid h-6 w-6 place-items-center rounded-[6px] bg-ink text-[10px] font-bold tracking-tight text-white">jh</span>
+      <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink">job hunter</span>
+    </Link>
+  );
+}
+
+export function TopNav({ pendingApprovals }: { pendingApprovals: number }) {
   const pathname = usePathname();
   return (
-    <nav className="flex flex-col gap-1" aria-label="Main">
-      {links.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`);
+    <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
+      {links.map((link) => {
+        const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
         return (
-          <Link key={href} href={href} className={`sidebar-link ${active ? "sidebar-link-active" : ""}`}>
-            <Icon size={16} className={active ? "text-brand-600" : "text-slate-400"} />
-            <span className="flex-1">{label}</span>
-            {href === "/approvals" && pendingApprovals > 0 ? (
-              <span className="rounded-full bg-brand-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{pendingApprovals}</span>
+          <Link key={link.href} href={link.href} className={`nav-link ${active ? "nav-link-active" : ""}`}>
+            {link.label}
+            {link.href === "/approvals" && pendingApprovals > 0 ? (
+              <span className="ml-1.5 rounded bg-clay-600 px-1 py-[1px] text-[10px] font-semibold leading-4 text-white">{pendingApprovals}</span>
             ) : null}
           </Link>
         );
@@ -44,39 +42,24 @@ export function SidebarNav({ pendingApprovals }: { pendingApprovals: number }) {
 export function MobileNav({ pendingApprovals }: { pendingApprovals: number }) {
   const pathname = usePathname();
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white/80 px-3 py-2 backdrop-blur lg:hidden" aria-label="Main">
-      {links.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`);
+    <nav className="flex gap-4 overflow-x-auto border-t border-line px-4 md:hidden" aria-label="Main">
+      {links.map((link) => {
+        const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
         return (
           <Link
-            key={href}
-            href={href}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium ${
-              active ? "bg-brand-50 text-brand-700" : "text-slate-500"
+            key={link.href}
+            href={link.href}
+            className={`flex h-10 shrink-0 items-center gap-1 border-b-2 text-[12.5px] font-medium ${
+              active ? "border-ink text-ink" : "border-transparent text-muted"
             }`}
           >
-            <Icon size={14} />
-            {label}
-            {href === "/approvals" && pendingApprovals > 0 ? (
-              <span className="rounded-full bg-brand-600 px-1 text-[9px] font-bold text-white">{pendingApprovals}</span>
+            {link.label}
+            {link.href === "/approvals" && pendingApprovals > 0 ? (
+              <span className="rounded bg-clay-600 px-1 text-[9px] font-semibold text-white">{pendingApprovals}</span>
             ) : null}
           </Link>
         );
       })}
     </nav>
-  );
-}
-
-export function Brand() {
-  return (
-    <Link href="/dashboard" className="flex items-center gap-2.5">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
-        <Sparkles size={17} />
-      </span>
-      <span>
-        <span className="block text-sm font-semibold tracking-tight text-slate-900">Job Hunter</span>
-        <span className="block text-[11px] text-slate-500">careful by design</span>
-      </span>
-    </Link>
   );
 }

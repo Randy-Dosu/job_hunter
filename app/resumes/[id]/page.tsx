@@ -38,16 +38,15 @@ export default async function TailoredResumePage({ params }: { params: Promise<{
 
   return (
     <AppShell>
-      <Link href={`/jobs/${job.id}`} className="mb-4 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800">
+      <Link href={`/jobs/${job.id}`} className="mb-4 inline-flex items-center gap-1 text-[12px] text-muted hover:text-ink">
         <ArrowLeft size={13} /> Back to the vacancy
       </Link>
       <PageHeader
-        eyebrow="Resume workspace"
-        title={`Tailoring for ${job.title}`}
+        title={`Resume for ${job.title}`}
         description={`${job.company} · draft built only from your verified facts · review every change before you export or package it`}
         actions={
-          <span className={resume.status === "user_approved" ? "badge-strong" : "badge-possible"}>
-            <ShieldCheck size={11} /> {resume.status === "user_approved" ? "Resume approved by you" : "Draft — awaiting your approval"}
+          <span className={resume.status === "user_approved" ? "chip-moss" : "chip-warn"}>
+            <ShieldCheck size={10} /> {resume.status === "user_approved" ? "Approved by you" : "Draft — needs your approval"}
           </span>
         }
       />

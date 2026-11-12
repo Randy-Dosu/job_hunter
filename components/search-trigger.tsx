@@ -42,8 +42,8 @@ export function SearchTrigger({ label = "Run search now", variant = "primary" }:
         {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
         {loading ? "Searching approved sources…" : label}
       </button>
-      {summary ? <p className="text-[11px] text-emerald-700">{summary}</p> : null}
-      {error ? <p className="max-w-xs text-right text-[11px] text-rose-600">{error}</p> : null}
+      {summary ? <p className="text-[11px] text-moss-700">{summary}</p> : null}
+      {error ? <p className="max-w-xs text-right text-[11px] text-clay-700">{error}</p> : null}
     </div>
   );
 }

@@ -118,7 +118,7 @@ export function ApprovalActions({
   return (
     <div className="space-y-3">
       {approvalValid ? (
-        <div className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+        <div className="flex items-start gap-2 rounded-md bg-moss-50 px-3 py-2 text-xs text-moss-700">
           <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
           <span>
             Approved {approvalAt ? new Date(approvalAt).toLocaleString("en-GB") : ""} for this exact package version. Any edit
@@ -126,14 +126,14 @@ export function ApprovalActions({
           </span>
         </div>
       ) : (
-        <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <div className="flex items-start gap-2 rounded-md bg-[#fdf9ef] px-3 py-2 text-xs text-[#8a5a06]">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           <span>No valid approval yet. Nothing can be submitted until you approve this specific package.</span>
         </div>
       )}
 
       {blocked ? (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-[11px] text-rose-700">
+        <p className="rounded-md bg-clay-50 px-3 py-2 text-[11px] text-clay-700">
           {unsupportedCount > 0
             ? "This package contains statements that are not backed by verified evidence. Resolve them in the resume workspace first."
             : "The tailored resume has not been approved by you yet. Approve it in the resume workspace first."}
@@ -142,7 +142,7 @@ export function ApprovalActions({
 
       {!approvalValid ? (
         <>
-          <label className="flex items-start gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-xs leading-relaxed text-slate-700">
+          <label className="flex items-start gap-2 rounded-md border border-line px-3 py-2.5 text-xs leading-relaxed text-ink-soft">
             <input
               type="checkbox"
               className="mt-0.5"
@@ -172,25 +172,25 @@ export function ApprovalActions({
             {busy === "handoff" ? <Loader2 size={14} className="animate-spin" /> : <ArrowUpRight size={14} />}
             Open the official application page
           </button>
-          <p className="text-center text-[10px] leading-relaxed text-slate-400">
+          <p className="text-center text-[10px] leading-relaxed text-muted">
             Manual handoff only. Job Hunter does not submit, and will never claim a submission it cannot confirm.
           </p>
 
           {handoffUrl ? (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
-              Opened <span className="font-medium text-slate-800">{handoffUrl}</span>. Complete the form there, then record the
+            <div className="rounded-md border border-line bg-[#fbfaf8] px-3 py-2 text-[11px] text-ink-soft">
+              Opened <span className="font-medium text-ink">{handoffUrl}</span>. Complete the form there, then record the
               confirmation reference below.
             </div>
           ) : null}
 
           {applicationId && applicationStatus !== "submitted" ? (
-            <div className="rounded-lg border border-slate-200 p-3">
-              <label className="label" htmlFor="reference">
+            <div className="rounded-md border border-line p-3">
+              <label className="field-label" htmlFor="reference">
                 Confirmation reference
               </label>
               <input
                 id="reference"
-                className="input text-xs"
+                className="field text-xs"
                 placeholder="e.g. application ID from the employer"
                 value={reference}
                 onChange={(event) => setReference(event.target.value)}
@@ -206,7 +206,7 @@ export function ApprovalActions({
               </button>
             </div>
           ) : applicationStatus === "submitted" ? (
-            <div className="rounded-lg bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
+            <div className="rounded-md bg-moss-50 px-3 py-2 text-[11px] text-moss-700">
               Recorded as submitted. Follow up in ten days if you have not heard back.
             </div>
           ) : null}
@@ -223,11 +223,11 @@ export function ApprovalActions({
       )}
 
       {status === "SUBMITTED" ? (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
+        <p className="rounded-md bg-moss-50 px-3 py-2 text-[11px] text-moss-700">
           This package is marked submitted with a recorded confirmation.
         </p>
       ) : null}
-      {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
+      {error ? <p className="rounded-md bg-clay-50 px-3 py-2 text-xs text-clay-700">{error}</p> : null}
     </div>
   );
 }
