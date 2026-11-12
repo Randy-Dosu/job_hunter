@@ -108,6 +108,12 @@ export function ApprovalActions({
   };
 
   const blocked = !resumeApproved || unsupportedCount > 0;
+  let destinationHost = destinationUrl;
+  try {
+    destinationHost = new URL(destinationUrl).hostname.replace(/^www\./, "");
+  } catch {
+    destinationHost = destinationUrl;
+  }
 
   return (
     <div className="space-y-3">
@@ -146,7 +152,7 @@ export function ApprovalActions({
             />
             <span>
               I have reviewed this exact resume, cover letter and destination. I approve preparing this application for{" "}
-              <span className="font-semibold">{new URL(destinationUrl).hostname.replace(/^www\./, "")}</span> and understand the
+              <span className="font-semibold">{destinationHost}</span> and understand the
               approval expires if anything changes.
             </span>
           </label>

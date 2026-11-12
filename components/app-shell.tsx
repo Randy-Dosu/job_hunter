@@ -69,7 +69,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <MobileNav pendingApprovals={counts.pendingApprovals} />
         </div>
 
-        <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
           {paused ? (
             <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <PauseCircle size={16} />

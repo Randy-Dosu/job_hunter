@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { all, insert, nowIso, uid } from "@/lib/db";
+import { all, get, insert, nowIso, uid } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { fail, json, withUser } from "@/lib/api";
 
@@ -28,6 +28,14 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as { documentId?: string; items?: unknown };
     const items = z.array(factSchema).max(120).safeParse(body.items);
     if (!items.success) return fail("Some extracted facts were invalid.", 422);
+    if (body.documentId) {
+      const document = get<{ id: string }>(
+        "SELECT id FROM resume_documents WHERE id = ? AND user_id = ?",
+        body.documentId,
+        user.id,
+      );
+      if (!document) return fail("That resume document does not belong to your account.", 403);
+    }
     const now = nowIso();
     for (const fact of items.data) {
       insert("profile_evidence", {
