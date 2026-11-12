@@ -491,20 +491,6 @@ export async function runSearch(userId: string, trigger: "manual" | "scheduled" 
   return { runId, duplicateRun: false, counts };
 }
 
-let bootstrapPromise: Promise<unknown> | null = null;
-
-/** First visit: run a real search so the dashboard is never empty. */
-export async function ensureBootstrapSearch(userId: string) {
-  const anyJob = get<{ id: string }>("SELECT id FROM jobs LIMIT 1");
-  if (anyJob) return;
-  if (!bootstrapPromise) {
-    bootstrapPromise = runSearch(userId, "scheduled").finally(() => {
-      bootstrapPromise = null;
-    });
-  }
-  await bootstrapPromise;
-}
-
 export type MatchView = {
   match: {
     id: string;

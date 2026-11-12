@@ -23,18 +23,21 @@ npm run dev               # http://localhost:3000
 ```
 
 The first request creates `data/job-hunter.db` (SQLite via Node's built-in
-`node:sqlite`), applies the schema and seeds a demo account:
+`node:sqlite`) and applies the schema. **Nothing is seeded**: no accounts, no sample
+profile, no listings, no fixtures on screen. Create the first account at `/login` and
+the setup wizard takes you through market, resume facts and schedule.
 
-| Email | Password |
-| --- | --- |
-| `demo@jobhunter.app` | `hunter1234` |
-
-The demo account ships with a verified early-career profile, three reviewed job
-sources, a daily 07:00 search schedule and a base resume.
+To give an account administrator rights over source governance, list it in
+`ADMIN_EMAILS` (comma separated) before it registers — or restart after adding it and
+the existing account is promoted on open:
 
 ```bash
-npm test          # 45 unit + integration tests
-npm run db:reset  # delete the database; it is reseeded on the next request
+ADMIN_EMAILS=you@example.com npm run dev
+```
+
+```bash
+npm test          # 103 tests
+npm run db:reset  # delete the database; a clean schema is recreated on the next request
 npm run build     # production build
 ```
 
@@ -76,7 +79,7 @@ app/                     Next.js 15 App Router (server components + route handle
   dashboard|jobs|…       Screens
 components/              UI (server components + a few client islands)
 lib/
-  db/                    node:sqlite connection, schema, seed
+  db/                    node:sqlite connection, schema and additive migrations
   sources/               JobSourceAdapter implementations + normalization
   matching/              Requirement extraction + weighted scoring + hard filters
   resume/                Parsing (TXT/MD/PDF/DOCX), generation, grounding, PDF/DOCX render
@@ -172,7 +175,7 @@ adds anything unsupported, the deterministic summary is kept instead.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| POST | `/api/auth/signup` · `/login` · `/demo` · `/logout` | Sessions |
+| POST | `/api/auth/signup` · `/login` · `/logout` | Sessions |
 | GET/PUT | `/api/profile` | Candidate profile |
 | GET/PUT | `/api/preferences` | Market and schedule |
 | GET/POST | `/api/resumes` | Base resume upload (TXT/MD/PDF/DOCX) + parsing |
@@ -216,13 +219,14 @@ tests/ratelimit.test.ts    sliding window and auth endpoint throttling
 tests/manual-import.test.ts JobPosting parsing, SSRF guard, dedupe, daily cap
 tests/variants.test.ts     variant CRUD, resolution by role family, grounded re-ordering
 tests/migration.test.ts    legacy database upgrades in place, idempotently
+tests/fresh-start.test.ts  no seeded accounts, jobs or sample profile; ADMIN_EMAILS only
 ```
 
 Source budgets configured in the admin console are enforced: every fetch is logged and a
 source that has spent its hourly or daily allowance is skipped for that run with the
 reason recorded on the search run.
 
-`npm test` → 100 passing.
+`npm test` → 103 passing.
 
 ## Notifications, reminders and alerts
 
@@ -238,8 +242,7 @@ reminders, and vacancy-closed/unverified warnings. All are deduplicated by key.
 Users carry a `role`; administrators get `/admin/sources` to enable or disable an
 adapter, set its hourly/daily request budget (enforced per fetch), record the terms review and inspect
 ingestion/parsing faults, negative match feedback and low-confidence matches. Every
-change is audited. The demo account is an administrator so the console is reachable
-offline.
+change is audited. Administrators are granted by `ADMIN_EMAILS`, not by a seeded account.
 
 ## Manual job links
 

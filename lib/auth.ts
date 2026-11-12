@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { all, get, insert, nowIso, parseJson, run, uid } from "@/lib/db";
+import { adminEmails, all, get, insert, nowIso, parseJson, run, uid } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 export const SESSION_COOKIE = "jh_session";
@@ -64,6 +64,7 @@ export function registerUser(input: { name: string; email: string; password: str
     email,
     name: input.name.trim() || email.split("@")[0],
     password_hash: hashPassword(input.password),
+    role: adminEmails().includes(email) ? "admin" : "user",
     created_at: createdAt,
   });
   insert("candidate_profiles", {

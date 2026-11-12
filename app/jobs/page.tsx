@@ -5,7 +5,7 @@ import { JobCard } from "@/components/job-card";
 import { ManualJobForm } from "@/components/manual-job-form";
 import { SearchTrigger } from "@/components/search-trigger";
 import { Callout, EmptyState } from "@/components/ui";
-import { ensureBootstrapSearch, listMatches, type MatchView } from "@/lib/search";
+import { listMatches, type MatchView } from "@/lib/search";
 import { requireUser } from "@/lib/auth";
 import { getProfileContext } from "@/lib/profile";
 
@@ -21,7 +21,6 @@ const FILTERS = [
 
 export default async function JobsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const user = await requireUser();
-  await ensureBootstrapSearch(user.id);
   const { tab = "all" } = await searchParams;
   const context = getProfileContext(user.id);
   const prefs = context.preferences;

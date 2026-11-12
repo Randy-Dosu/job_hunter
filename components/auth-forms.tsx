@@ -15,36 +15,6 @@ async function post(url: string, body: unknown) {
   return data;
 }
 
-export function DemoLoginButton({ className = "btn-primary w-full", label = "Open the demo account" }: { className?: string; label?: string }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const run = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await post("/api/auth/demo", {});
-      startTransition(() => router.push(data.redirect ?? "/dashboard"));
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="w-full">
-      <button type="button" onClick={run} disabled={loading || pending} className={className}>
-        {loading || pending ? <Loader2 size={13} className="animate-spin" /> : null}
-        {label}
-      </button>
-      {error ? <p className="mt-2 text-[11px] text-clay-700">{error}</p> : null}
-    </div>
-  );
-}
-
 export function LoginForm({ mode: initialMode = "login" }: { mode?: "login" | "signup" }) {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
@@ -138,8 +108,6 @@ export function LoginForm({ mode: initialMode = "login" }: { mode?: "login" | "s
       <div className="my-4 flex items-center gap-3 text-[11px] text-muted">
         <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
       </div>
-      <DemoLoginButton className="btn-secondary w-full" label="Continue with the demo account" />
-      <p className="mt-2 text-center text-[11px] text-muted">demo@jobhunter.app · hunter1234</p>
     </div>
   );
 }

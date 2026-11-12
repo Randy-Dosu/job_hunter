@@ -7,6 +7,7 @@ export function useTempDatabase() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "job-hunter-test-"));
   process.env.DATABASE_PATH = path.join(dir, "test.db");
   process.env.SOURCE_FIXTURE_FALLBACK = "true";
+  process.env.ADMIN_EMAILS = "";
   delete process.env.LLM_API_KEY;
   return {
     cleanup() {
@@ -14,5 +15,3 @@ export function useTempDatabase() {
     },
   };
 }
-
-export const DEMO_USER_EMAIL = "demo@jobhunter.app";

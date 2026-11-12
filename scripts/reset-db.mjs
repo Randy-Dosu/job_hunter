@@ -9,4 +9,4 @@ for (const suffix of ["", "-wal", "-shm"]) {
     console.log("removed", target);
   }
 }
-console.log("Database reset. It will be recreated and seeded on the next request.");
+console.log("Database reset. A clean schema will be created on the next request — no accounts or listings are seeded.");

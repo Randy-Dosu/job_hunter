@@ -20,6 +20,7 @@ beforeEach(() => {
   delete globalRef.__jobHunterDb;
   process.env.DATABASE_PATH = file;
   process.env.SOURCE_FIXTURE_FALLBACK = "true";
+  process.env.ADMIN_EMAILS = "owner@example.com";
 
   const legacy = new DatabaseSync(file);
   legacy.exec(`
@@ -56,7 +57,7 @@ beforeEach(() => {
   `);
   legacy
     .prepare("INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)")
-    .run("12121212-1212-4212-8212-121212121212", "demo@jobhunter.app", "Demo", "x", new Date().toISOString());
+    .run("12121212-1212-4212-8212-121212121212", "owner@example.com", "Owner", "x", new Date().toISOString());
   legacy.close();
 });
 
@@ -82,9 +83,9 @@ describe("additive migrations", () => {
     const dedupeIndex = db.all<{ name: string }>("PRAGMA index_list(notifications)").map((row) => row.name);
     expect(dedupeIndex).toContain("idx_notifications_dedupe");
 
-    // The existing demo account is promoted, so governance stays reachable.
-    const demo = db.get<{ role: string }>("SELECT role FROM users WHERE email = ?", "demo@jobhunter.app");
-    expect(demo?.role).toBe("admin");
+    // Administrators come from ADMIN_EMAILS; existing accounts are promoted on open.
+    const owner = db.get<{ role: string }>("SELECT role FROM users WHERE email = ?", "owner@example.com");
+    expect(owner?.role).toBe("admin");
 
     // New tables exist and the manual-import source was registered.
     const variants = db.all<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'resume_variants'");

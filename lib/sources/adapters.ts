@@ -206,11 +206,3 @@ export function getAdapter(slug: string): JobSourceAdapter | undefined {
   return adapters.find((adapter) => adapter.slug === slug);
 }
 
-/** Normalized fixture listings, used for the logged-out preview when the store is empty. */
-export function fixturePreview(limit = 6): NormalizedJob[] {
-  return adapters
-    .flatMap((adapter) => (adapter as unknown as { parseFixturePayload: () => NormalizedJob[] }).parseFixturePayload())
-    .filter((job) => job.title && job.company)
-    .sort((a, b) => new Date(b.postedAt ?? 0).getTime() - new Date(a.postedAt ?? 0).getTime())
-    .slice(0, limit);
-}

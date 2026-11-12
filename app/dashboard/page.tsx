@@ -6,7 +6,7 @@ import { SearchTrigger } from "@/components/search-trigger";
 import { JobCard } from "@/components/job-card";
 import { Callout, Stat, formatDate } from "@/components/ui";
 import { MarkAllRead } from "@/components/mark-read";
-import { ensureBootstrapSearch, listMatches } from "@/lib/search";
+import { listMatches } from "@/lib/search";
 import { all, get } from "@/lib/db";
 import { getProfileContext } from "@/lib/profile";
 import { requireUser } from "@/lib/auth";
@@ -19,8 +19,6 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const context = getProfileContext(user.id);
   if (!context.profile.headline && context.evidence.length === 0) redirect("/onboarding");
-
-  await ensureBootstrapSearch(user.id);
 
   const matches = listMatches(user.id);
   const strong = matches.filter((entry) => entry.match.verdict === "strong");

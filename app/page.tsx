@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import { Search, ArrowRight, MapPin } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { all } from "@/lib/db";
-import { fixturePreview } from "@/lib/sources/adapters";
-import { DemoLoginButton } from "@/components/auth-forms";
 import { CompanyMark } from "@/components/ui";
 import { formatRelative } from "@/lib/text";
 
@@ -48,28 +46,17 @@ export default async function HomePage() {
      WHERE j.status = 'open' ORDER BY j.posted_at DESC LIMIT 5`,
   );
 
-  const preview: PreviewJob[] = stored.length
-    ? stored.map((job) => ({
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        salary: job.salary,
-        remotePolicy: job.remote_policy,
-        employmentType: job.employment_type,
-        postedAt: job.posted_at,
-        source: job.source_name,
-      }))
-    : fixturePreview(5).map((job) => ({
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        salary: job.salary,
-        remotePolicy: job.remotePolicy,
-        employmentType: job.employmentType,
-        postedAt: job.postedAt,
-        source: job.sourceSlug === "remoteok" ? "Remote OK" : job.sourceSlug === "remotive" ? "Remotive" : "Arbeitnow",
-      }));
+  const preview: PreviewJob[] = stored.map((job) => ({
+    id: job.id,
+    title: job.title,
+    company: job.company,
+    location: job.location,
+    salary: job.salary,
+    remotePolicy: job.remote_policy,
+    employmentType: job.employment_type,
+    postedAt: job.posted_at,
+    source: job.source_name,
+  }));
 
   return (
     <div className="min-h-screen">
@@ -153,7 +140,7 @@ export default async function HomePage() {
         <div id="jobs">
           <div className="mb-2 flex items-baseline justify-between">
             <h2 className="text-[15px] font-semibold text-ink">Recently discovered roles</h2>
-            <span className="text-[11.5px] text-muted">{stored.length ? "From your sources" : "Sample listings from the approved sources"}</span>
+            <span className="text-[11.5px] text-muted">{stored.length ? `${stored.length} open` : "Nothing ingested yet"}</span>
           </div>
 
           <div className="overflow-hidden rounded-[10px] border border-line bg-surface">
@@ -181,12 +168,29 @@ export default async function HomePage() {
                 </div>
               </div>
             ))}
+            {!preview.length ? (
+              <div className="px-5 py-10 text-center">
+                <p className="text-[13px] font-semibold text-ink">No listings yet</p>
+                <p className="mx-auto mt-1 max-w-sm text-[12px] leading-relaxed text-muted">
+                  Listings appear here after a signed-in search. Create an account, set your market and run the first search — nothing is
+                  pre-filled or invented.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <Link href="/login?mode=signup" className="btn-primary">
+                    Create an account
+                  </Link>
+                  <Link href="/login" className="btn-secondary">
+                    Sign in
+                  </Link>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <p className="mt-3 text-[11.5px] leading-relaxed text-muted">
             {stored.length
-              ? "These are real normalized listings from the enabled sources, shown before sign-in without any personal data."
-              : "The store is empty in this environment, so these are the saved source fixtures. Sign in and run a search to ingest live listings."}
+              ? "Normalized listings from the enabled sources, shown before sign-in without any personal data."
+              : "No seeded or sample data is shipped. Every listing in this product comes from a real search against a reviewed source."}
           </p>
         </div>
 
@@ -209,15 +213,20 @@ export default async function HomePage() {
           </div>
 
           <div className="rounded-[10px] border border-line bg-[#fbfaf8] p-5">
-            <h2 className="text-[13px] font-semibold text-ink">Look around the demo</h2>
+            <h2 className="text-[13px] font-semibold text-ink">Start your own search</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-muted">
-              A seeded early-career profile, three reviewed sources and a package waiting in the approval centre.
+              Your market, verified facts and approvals are yours alone. Nothing is pre-filled from a sample profile.
             </p>
-            <div className="mt-3">
-              <DemoLoginButton className="btn-primary w-full" label="Open the demo account" />
+            <div className="mt-3 flex flex-col gap-2">
+              <Link href="/login?mode=signup" className="btn-primary w-full">
+                Create an account
+              </Link>
+              <Link href="/login" className="btn-secondary w-full">
+                Sign in
+              </Link>
             </div>
-            <p className="mt-2 text-[11px] text-muted">
-              demo@jobhunter.app · hunter1234
+            <p className="mt-2 text-[11px] leading-relaxed text-muted">
+              First search takes about a minute once your resume facts are confirmed.
             </p>
           </div>
 

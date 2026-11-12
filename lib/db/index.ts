@@ -2,9 +2,17 @@ import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { SCHEMA_SQL } from "./schema";
-import { seedIfEmpty } from "./seed";
+import { ensureSourceCatalogue } from "./catalogue";
 
 export type SqlValue = string | number | null;
+
+/** Emails that should hold administrator rights (ADMIN_EMAILS, comma separated). */
+export function adminEmails(): string[] {
+  return (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => entry.includes("@"));
+}
 
 const globalRef = globalThis as unknown as { __jobHunterDb?: DatabaseSync };
 
@@ -39,29 +47,12 @@ function migrate(db: DatabaseSync) {
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_dedupe ON notifications(user_id, dedupe_key) WHERE dedupe_key IS NOT NULL",
   );
 
-  // The demo account owns source governance so the admin console is reachable offline.
-  db.prepare("UPDATE users SET role = 'admin' WHERE email = ? AND role <> 'admin'").run("demo@jobhunter.app");
-
-}
-
-/** Governance row for user-supplied links (FR-017). Runs after seeding on every open. */
-function ensureManualSource(db: DatabaseSync) {
-  // Governance row for user-supplied links (FR-017), idempotent by slug.
-  const manual = db.prepare("SELECT id FROM job_sources WHERE slug = 'manual'").get() as { id: string } | undefined;
-  if (!manual) {
-    db.prepare(
-      `INSERT INTO job_sources (id, name, slug, source_type, access_method, terms_url, terms_reviewed_at, enabled,
-        rate_limit_config_json, supported_markets, notes)
-       VALUES (?, 'Manual import', 'manual', 'user_supplied', ?, ?, ?, 1, ?, 'Any', ?)`,
-    ).run(
-      crypto.randomUUID(),
-      "Single URL pasted by the user",
-      "https://jobhunter.app/terms/manual-import",
-      new Date().toISOString(),
-      JSON.stringify({ maxRequestsPerDay: 20, timeoutMs: 8000 }),
-      "User-supplied link. Fetched once with no login or bypass. The user is responsible for that site's terms.",
-    );
+  // Administrators are declared by environment, never seeded: ADMIN_EMAILS is a
+  // comma-separated allowlist applied to existing accounts on open.
+  for (const email of adminEmails()) {
+    db.prepare("UPDATE users SET role = 'admin' WHERE lower(email) = ? AND role <> 'admin'").run(email);
   }
+
 }
 
 function open(): DatabaseSync {
@@ -72,8 +63,7 @@ function open(): DatabaseSync {
   const db = new DatabaseSync(file);
   db.exec(SCHEMA_SQL);
   migrate(db);
-  seedIfEmpty(db);
-  ensureManualSource(db);
+  ensureSourceCatalogue(db);
   return db;
 }
 

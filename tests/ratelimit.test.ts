@@ -91,7 +91,7 @@ describe("auth endpoint protection", () => {
       }),
     );
     expect(other.status).toBe(401);
-    // Sanity: the limiter is process-wide but keyed per client.
-    expect(db.get<{ count: number }>("SELECT COUNT(*) AS count FROM users")?.count).toBeGreaterThan(0);
+    // Failed sign-ins never create or reveal an account.
+    expect(db.get<{ count: number }>("SELECT COUNT(*) AS count FROM users")?.count).toBe(0);
   });
 });
