@@ -16,6 +16,14 @@ export async function withUser<T>(handler: (user: SessionUser) => Promise<T> | T
   return handler(user);
 }
 
+/** Source governance and quality review are administrator-only. */
+export async function withAdmin<T>(handler: (user: SessionUser) => Promise<T> | T) {
+  const user = await getSessionUser();
+  if (!user) return fail("Please sign in to continue.", 401);
+  if (user.role !== "admin") return fail("Administrator access required.", 403);
+  return handler(user);
+}
+
 export function parseBody<T>(value: unknown): T {
   return value as T;
 }

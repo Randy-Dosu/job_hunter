@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, LogOut, Search } from "lucide-react";
+import { Bell, LogOut, Search, ShieldCheck } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { dashboardCounts } from "@/lib/search";
 import { getProfileContext } from "@/lib/profile";
@@ -33,6 +33,15 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               <span>Search jobs</span>
               <kbd className="ml-2 rounded border border-line px-1 font-mono text-[10px] text-muted">/</kbd>
             </Link>
+            {user.role === "admin" ? (
+              <Link
+                href="/admin/sources"
+                className="hidden h-8 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium text-ink-soft hover:bg-[#f1eee9] hover:text-ink sm:flex"
+                title="Source governance"
+              >
+                <ShieldCheck size={13} /> Sources
+              </Link>
+            ) : null}
             <Link
               href="/dashboard#activity"
               className="relative grid h-8 w-8 place-items-center rounded-md text-ink-soft hover:bg-[#f1eee9]"
