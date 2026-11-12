@@ -916,8 +916,7 @@ job-hunt-agent/
 │   ├── resume/               # Resume parsing and generation
 │   └── source-adapters/      # Job-source integrations
 ├── database/
-│   ├── migrations/
-│   └── seeds/
+│   └── migrations/          # schema + source catalogue; nothing is seeded
 ├── docs/
 │   ├── PRD.md
 │   ├── architecture.md
