@@ -1,0 +1,90 @@
+[
+ {
+  "legal": "RemoteOK fixtures \u2014 sample data for offline demo."
+ },
+ {
+  "id": "110001",
+  "slug": "junior-software-engineer-parcelly",
+  "company": "Parcelly",
+  "position": "Junior Software Engineer",
+  "description": "<p>Parcelly builds last-mile delivery APIs used by 400 merchants.</p><h3>What you'll do</h3><ul><li>Build Node.js services and REST APIs</li><li>Ship small features to our React dashboard</li><li>Deploy with AWS and GitHub Actions</li></ul><h3>Requirements</h3><ul><li>JavaScript or TypeScript experience</li><li>Understanding of REST APIs and Git</li><li>Interest in cloud infrastructure</li></ul><h3>Nice to have</h3><ul><li>AWS certification</li></ul>",
+  "location": "Worldwide",
+  "salary_min": 38000,
+  "salary_max": 52000,
+  "tags": [
+   "javascript",
+   "node",
+   "aws",
+   "react"
+  ],
+  "date": "2026-11-10T06:40:00Z",
+  "url": "https://remoteok.com/remote-jobs/110001-junior-software-engineer-parcelly"
+ },
+ {
+  "id": "110002",
+  "slug": "react-developer-studio-mono",
+  "company": "Studio Mono",
+  "position": "React Developer",
+  "description": "<p>Studio Mono is a small product studio working with museums and cultural institutions.</p><h3>Responsibilities</h3><ul><li>Build interactive React frontends</li><li>Translate Figma prototypes into production code</li><li>Write TypeScript with strong typing</li></ul><h3>Requirements</h3><ul><li>Strong React and TypeScript skills</li><li>Eye for accessible, responsive UI</li><li>Portfolio of shipped projects</li></ul>",
+  "location": "Worldwide",
+  "salary_min": 42000,
+  "salary_max": 58000,
+  "tags": [
+   "react",
+   "typescript",
+   "figma"
+  ],
+  "date": "2026-11-07T09:10:00Z",
+  "url": "https://remoteok.com/remote-jobs/110002-react-developer-studio-mono"
+ },
+ {
+  "id": "110003",
+  "slug": "wordpress-developer-pixel-foundry",
+  "company": "Pixel Foundry",
+  "position": "WordPress Developer",
+  "description": "<p>Pixel Foundry is an agency in Austin, Texas.</p><h3>Requirements</h3><ul><li>PHP and WordPress theme development</li><li>HTML, CSS and JavaScript</li><li>On-site work in our Austin office five days per week</li></ul>",
+  "location": "Austin, TX",
+  "tags": [
+   "php",
+   "wordpress",
+   "javascript"
+  ],
+  "date": "2026-11-05T12:00:00Z",
+  "url": "https://remoteok.com/remote-jobs/110003-wordpress-developer-pixel-foundry"
+ },
+ {
+  "id": "110004",
+  "slug": "technical-support-engineer-nimbus",
+  "company": "Nimbus Cloud",
+  "position": "Technical Support Engineer",
+  "description": "<p>Nimbus Cloud supports developer platforms.</p><h3>Responsibilities</h3><ul><li>Triage API issues and escalations</li><li>Write knowledge base articles</li></ul><h3>Requirements</h3><ul><li>Linux administration experience</li><li>Customer support experience</li><li>Basic SQL</li></ul>",
+  "location": "Worldwide",
+  "salary_min": 30000,
+  "salary_max": 40000,
+  "tags": [
+   "linux",
+   "sql",
+   "customer support"
+  ],
+  "date": "2026-11-04T15:30:00Z",
+  "url": "https://remoteok.com/remote-jobs/110004-technical-support-engineer-nimbus"
+ },
+ {
+  "id": "110005",
+  "slug": "senior-platform-engineer-orbit",
+  "company": "Orbit Infrastructure",
+  "position": "Senior Platform Engineer",
+  "description": "<p>Orbit runs Kubernetes platforms for enterprise clients.</p><h3>Requirements</h3><ul><li>5+ years of experience with Kubernetes and AWS</li><li>Strong Go or Python</li><li>Experience leading incident response</li></ul><h3>Responsibilities</h3><ul><li>Own our internal developer platform</li><li>Mentor engineers across three teams</li></ul>",
+  "location": "Worldwide",
+  "salary_min": 120000,
+  "salary_max": 150000,
+  "tags": [
+   "kubernetes",
+   "aws",
+   "go",
+   "python"
+  ],
+  "date": "2026-11-02T11:20:00Z",
+  "url": "https://remoteok.com/remote-jobs/110005-senior-platform-engineer-orbit"
+ }
+]

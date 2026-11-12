@@ -1,0 +1,126 @@
+{
+ "0-legal-notice": "Jobs provided by Remotive. Sample fixtures for offline/demo use.",
+ "jobs": [
+  {
+   "id": 91001,
+   "url": "https://remotive.com/remote-jobs/software-dev/junior-frontend-developer-91001?utm_source=jobhunter",
+   "title": "Junior Frontend Developer",
+   "company_name": "Brightline Studio",
+   "category": "Software Development",
+   "tags": [
+    "react",
+    "typescript",
+    "tailwind",
+    "remote"
+   ],
+   "job_type": "full_time",
+   "publication_date": "2026-11-11T08:15:00Z",
+   "candidate_required_location": "Worldwide",
+   "salary": "$32,000 - $45,000",
+   "description": "<h3>About the role</h3><p>Brightline Studio builds design-led products for climate startups. We are hiring a junior frontend developer to join our distributed team of nine.</p><h3>What you'll do</h3><ul><li>Build accessible interfaces in React and TypeScript</li><li>Turn Figma designs into responsive components with Tailwind CSS</li><li>Review pull requests and pair with senior engineers</li></ul><h3>Requirements</h3><ul><li>Working knowledge of JavaScript and React</li><li>Comfortable with Git and code review</li><li>0-2 years of professional or project experience</li><li>Clear written communication in English</li></ul><h3>Nice to have</h3><ul><li>Experience with Next.js</li><li>Exposure to automated testing</li></ul><p>We hire worldwide. Candidates must have the right to work where they live; we do not sponsor visas.</p>"
+  },
+  {
+   "id": 91002,
+   "url": "https://remotive.com/remote-jobs/software-dev/frontend-engineer-react-91002",
+   "title": "Frontend Engineer (React)",
+   "company_name": "Kite & Co",
+   "category": "Software Development",
+   "tags": [
+    "react",
+    "typescript",
+    "graphql"
+   ],
+   "job_type": "full_time",
+   "publication_date": "2026-11-09T08:15:00Z",
+   "candidate_required_location": "Europe",
+   "salary": "\u20ac55,000 - \u20ac75,000",
+   "description": "<h3>The role</h3><p>Kite &amp; Co is a fintech scale-up serving small businesses across Europe.</p><h3>Responsibilities</h3><ul><li>Own complex React features end to end</li><li>Improve our GraphQL data layer</li><li>Mentor two junior engineers</li></ul><h3>Requirements</h3><ul><li>3+ years of experience building production React applications</li><li>Strong TypeScript and testing skills</li><li>Experience with GraphQL</li><li>Based in Europe with the right to work</li></ul>"
+  },
+  {
+   "id": 91003,
+   "url": "https://remotive.com/remote-jobs/software-dev/full-stack-developer-91003",
+   "title": "Full Stack Developer (Node.js / React)",
+   "company_name": "Northwind Labs",
+   "category": "Software Development",
+   "tags": [
+    "node",
+    "react",
+    "postgresql",
+    "sql"
+   ],
+   "job_type": "full_time",
+   "publication_date": "2026-11-08T08:15:00Z",
+   "candidate_required_location": "Worldwide",
+   "salary": "$48,000 - $62,000",
+   "description": "<h3>About Northwind Labs</h3><p>We build logistics software for small exporters.</p><h3>What you'll do</h3><ul><li>Ship features across our Node.js API and React frontend</li><li>Write SQL queries and maintain PostgreSQL schemas</li><li>Work with REST APIs and third-party integrations</li></ul><h3>What we're looking for</h3><ul><li>1-2 years of experience with JavaScript or TypeScript</li><li>Comfortable with Node.js, SQL and Git</li><li>Ability to learn quickly and communicate clearly</li></ul><h3>Nice to have</h3><ul><li>Docker experience</li><li>Experience with cloud hosting</li></ul>"
+  },
+  {
+   "id": 91004,
+   "url": "https://remotive.com/remote-jobs/data/junior-data-analyst-91004",
+   "title": "Junior Data Analyst",
+   "company_name": "Lumen Analytics",
+   "category": "Data",
+   "tags": [
+    "sql",
+    "excel",
+    "power bi",
+    "python"
+   ],
+   "job_type": "full_time",
+   "publication_date": "2026-11-06T08:15:00Z",
+   "candidate_required_location": "Worldwide",
+   "salary": "$28,000 - $38,000",
+   "description": "<h3>About the role</h3><p>Lumen Analytics helps NGOs measure programme outcomes.</p><h3>Responsibilities</h3><ul><li>Write SQL to prepare reporting datasets</li><li>Build dashboards in Power BI</li><li>Automate recurring reports with Python</li></ul><h3>Requirements</h3><ul><li>SQL and spreadsheet (Excel) skills</li><li>Basic Python for data cleaning</li><li>Attention to detail and clear documentation</li></ul><h3>Nice to have</h3><ul><li>Experience with Tableau</li><li>Statistics coursework</li></ul>"
+  },
+  {
+   "id": 91005,
+   "url": "https://remotive.com/remote-jobs/software-dev/graduate-software-engineer-91005",
+   "title": "Graduate Software Engineer",
+   "company_name": "Helio Systems",
+   "category": "Software Development",
+   "tags": [
+    "python",
+    "git",
+    "linux"
+   ],
+   "job_type": "full_time",
+   "publication_date": "2026-11-04T08:15:00Z",
+   "candidate_required_location": "United Kingdom",
+   "salary": "\u00a330,000 - \u00a336,000",
+   "description": "<h3>About Helio</h3><p>Helio Systems builds telemetry tooling for renewable energy operators.</p><h3>What you'll do</h3><ul><li>Develop backend services in Python</li><li>Write tests and documentation</li><li>Support production debugging on Linux</li></ul><h3>Requirements</h3><ul><li>Degree in computer science or equivalent practical experience</li><li>Python fundamentals and Git workflow</li><li>Comfortable on the Linux command line</li></ul><h3>Nice to have</h3><ul><li>Experience with time-series data</li></ul><p>Applicants must already have the right to work in the United Kingdom. We are unable to sponsor visas.</p>"
+  },
+  {
+   "id": 91006,
+   "url": "https://remotive.com/remote-jobs/customer-support/customer-support-specialist-91006",
+   "title": "Customer Support Specialist (US hours)",
+   "company_name": "Tally Support",
+   "category": "Customer Support",
+   "tags": [
+    "customer support",
+    "zendesk"
+   ],
+   "job_type": "full_time",
+   "publication_date": "2026-11-03T08:15:00Z",
+   "candidate_required_location": "Worldwide",
+   "salary": "$22,000 - $28,000",
+   "description": "<h3>About the role</h3><p>Provide chat and email support for a payroll SaaS product.</p><h3>Responsibilities</h3><ul><li>Resolve customer tickets within SLA</li><li>Document recurring issues</li></ul><h3>Requirements</h3><ul><li>Excellent written communication</li><li>1 year of customer support experience</li><li>Available 9am-5pm US Eastern</li></ul>"
+  },
+  {
+   "id": 91007,
+   "url": "https://remotive.com/remote-jobs/data/machine-learning-intern-91007",
+   "title": "Machine Learning Intern",
+   "company_name": "Vectorly",
+   "category": "Data",
+   "tags": [
+    "python",
+    "pytorch",
+    "machine learning"
+   ],
+   "job_type": "internship",
+   "publication_date": "2026-11-10T08:15:00Z",
+   "candidate_required_location": "Worldwide",
+   "salary": "$2,000/month stipend",
+   "description": "<h3>About the internship</h3><p>Vectorly builds retrieval models for research teams. This is a six-month paid internship.</p><h3>What you'll do</h3><ul><li>Train and evaluate PyTorch models</li><li>Clean and label datasets with Python</li></ul><h3>Requirements</h3><ul><li>Strong Python skills</li><li>Coursework in machine learning or statistics</li><li>Familiarity with PyTorch or TensorFlow</li></ul><h3>Nice to have</h3><ul><li>Published research</li></ul>"
+  }
+ ]
+}
