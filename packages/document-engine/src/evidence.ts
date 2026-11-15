@@ -46,6 +46,32 @@ export interface CheckEvidenceInput {
   baseText?: string | undefined;
 }
 
+/**
+ * Normalise a number found in prose so `1.4`, `1,4` and `1.4s` compare equal.
+ *
+ * Decimals matter: a verified fact that says "cut p95 latency from 1.4s to 180ms"
+ * must support the same figures in a draft. Comparing only the digit characters
+ * (`1.4` -> `14`) produced false "unverified figure" warnings on every decimal,
+ * which trains users to approve real warnings without reading them.
+ */
+function normalizeNumber(raw: string): string {
+  return raw.replace(/,/g, '').replace(/[.]+$/, '');
+}
+
+/** Numbers in `text` worth checking (two or more digits). */
+function numbersIn(text: string): Array<{ raw: string; normalized: string }> {
+  return (text.match(/\b\d[\d,.]*\s*(%|percent|k\b|m\b|\+)?/gi) ?? [])
+    .map((raw) => ({ raw: raw.trim(), normalized: normalizeNumber(raw.trim()) }))
+    .filter((entry) => entry.normalized.replace(/\D/g, '').length >= 2);
+}
+
+/** True when the verified source text contains this number. */
+function isSupportedNumber(normalized: string, source: string): boolean {
+  if (source.includes(normalized)) return true;
+  // Tolerate unit suffixes attached in source ("180ms") and thousands grouping.
+  return source.replace(/,/g, '').includes(normalized);
+}
+
 export function checkEvidence(input: CheckEvidenceInput): EvidenceCheckResult {
   const verifiedById = new Map(input.verifiedFacts.map((fact) => [fact.id, fact]));
   const sourceText = [
@@ -67,12 +93,9 @@ export function checkEvidence(input: CheckEvidenceInput): EvidenceCheckResult {
         if (!trimmed) return trimmed;
 
         // --- numbers must exist in verified source text -------------------------
-        const numbers = trimmed.match(/\b\d[\d,.]*\s*(%|percent|k\b|m\b|\+)?/gi) ?? [];
-        for (const rawNumber of numbers) {
-          const numeric = rawNumber.replace(/[^\d]/g, '');
-          if (numeric.length < 2) continue; // ignore "3+ years" style single digits
-          if (!sourceText.includes(numeric)) {
-            const message = `Unverified figure "${rawNumber.trim()}" in "${truncate(trimmed, 60)}" — confirm it or remove it.`;
+        for (const { raw, normalized } of numbersIn(trimmed)) {
+          if (!isSupportedNumber(normalized, sourceText)) {
+            const message = `Unverified figure "${raw}" in "${truncate(trimmed, 60)}" — confirm it or remove it.`;
             issues.push({ sectionIndex, bulletIndex, message });
             warnings.add(message);
           }
@@ -132,12 +155,9 @@ export function checkEvidence(input: CheckEvidenceInput): EvidenceCheckResult {
 
   // Summary/headline checks are paragraph-level: require support too.
   const summaryText = input.content.summary ?? '';
-  for (const rawNumber of summaryText.match(/\b\d[\d,.]*\s*(%|percent|k\b|m\b|\+)?/gi) ?? []) {
-    const numeric = rawNumber.replace(/[^\d]/g, '');
-    if (numeric.length >= 2 && !sourceText.includes(numeric)) {
-      warnings.add(
-        `Unverified figure "${rawNumber.trim()}" in the summary — confirm it or remove it.`,
-      );
+  for (const { raw, normalized } of numbersIn(summaryText)) {
+    if (!isSupportedNumber(normalized, sourceText)) {
+      warnings.add(`Unverified figure "${raw}" in the summary — confirm it or remove it.`);
     }
   }
 

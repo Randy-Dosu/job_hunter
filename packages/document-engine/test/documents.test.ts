@@ -152,6 +152,63 @@ describe('checkEvidence — the truthfulness gate', () => {
     expect(result.issues).toEqual([]);
   });
 
+  it('accepts decimals, thousands separators and unit suffixes from verified facts', () => {
+    // Regression: comparing only digits ("1.4" -> "14") flagged true statements
+    // as unsupported, which trains users to approve warnings without reading them.
+    const withNumbers: GeneratedDocumentContent = {
+      kind: 'resume',
+      headline: 'Senior Backend Engineer',
+      summary: 'Cut p95 latency from 1.4s to 180ms.',
+      sections: [
+        {
+          heading: 'Experience',
+          bullets: [
+            'Cut p95 latency from 1.4s to 180ms.',
+            'Handled 40,000 transactions per day.',
+            'Led 12 engineers across 3 teams.',
+          ],
+          evidenceIds: ['num-1', 'num-2', 'num-3'],
+        },
+      ],
+      warnings: [],
+      wordCount: 20,
+    };
+
+    const verified = [
+      ...facts,
+      {
+        ...facts[0]!,
+        id: 'num-1',
+        label: 'Cut p95 latency from 1.4s to 180ms.',
+        verified: true,
+      },
+      { ...facts[0]!, id: 'num-2', label: 'Handled 40,000 transactions per day.', verified: true },
+      { ...facts[0]!, id: 'num-3', label: 'Led 12 engineers across 3 teams.', verified: true },
+    ];
+
+    const result = checkEvidence({
+      content: withNumbers,
+      providedFacts: verified,
+      verifiedFacts: verified,
+    });
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('still flags a figure that appears nowhere in the verified facts', () => {
+    const invented: GeneratedDocumentContent = {
+      kind: 'resume',
+      headline: 'Engineer',
+      summary: 'Backend engineer.',
+      sections: [
+        { heading: 'Experience', bullets: ['Increased revenue by 47,500 USD.'], evidenceIds: [] },
+      ],
+      warnings: [],
+      wordCount: 8,
+    };
+    const result = checkEvidence({ content: invented, providedFacts: facts, verifiedFacts: facts });
+    expect(result.warnings.join(' ')).toMatch(/Unverified figure "47,500"/);
+  });
+
   it('strips evidence ids that were not provided or are unverified', () => {
     const tampered = content();
     tampered.sections[0]!.evidenceIds = ['f6', 'made-up'];

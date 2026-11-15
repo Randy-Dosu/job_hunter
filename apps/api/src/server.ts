@@ -20,6 +20,7 @@ async function main(): Promise<void> {
 
   const db = createDatabase({
     connectionString: env.DATABASE_URL,
+    maxConnections: env.DATABASE_POOL_SIZE,
     logQueries: env.NODE_ENV === 'development' && env.LOG_LEVEL === 'debug',
   });
 

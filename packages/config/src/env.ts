@@ -26,6 +26,12 @@ export const envSchema = z.object({
     .trim()
     .min(1, 'DATABASE_URL is required')
     .default('postgresql://postgres:postgres@127.0.0.1:5432/postgres'),
+  /**
+   * Connection pool size. PGlite (the local dev database) serves a single
+   * connection at a time, so `npm run dev` sets this to 1; a real Postgres in
+   * production should use the default.
+   */
+  DATABASE_POOL_SIZE: z.coerce.number().int().min(1).max(100).default(10),
   PGLITE_DATA_DIR: z.string().trim().optional(),
   PGLITE_PORT: z.coerce.number().int().min(1).max(65535).default(5432),
 

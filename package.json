@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "npm run db:up && npm run dev --workspace @job-hunter/api",
+    "dev:api": "npm run db:up && DATABASE_POOL_SIZE=1 npm run dev --workspace @job-hunter/api",
     "dev:web": "npm run dev --workspace @job-hunter/web",
     "dev:worker": "npm run dev --workspace @job-hunter/worker",
     "db:up": "tsx scripts/dev-db.ts",
@@ -32,16 +32,21 @@
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "devDependencies": {
+    "@job-hunter/config": "*",
+    "@job-hunter/job-connectors": "*",
+    "@job-hunter/matching": "*",
+    "@job-hunter/shared-types": "*",
+    "@job-hunter/test-utils": "*",
     "@types/node": "^22.18.0",
     "@vitest/coverage-v8": "^4.1.12",
     "concurrently": "^10.0.7",
     "eslint": "^9.39.5",
+    "pg": "*",
     "prettier": "^3.10.1",
     "tsx": "^4.23.15",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.72.2",
-    "vitest": "^4.1.12",
-    "@job-hunter/test-utils": "*"
+    "vitest": "^4.1.12"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",
