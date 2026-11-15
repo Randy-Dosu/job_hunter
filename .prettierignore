@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+build
+.generated
+package-lock.json
+data
+*.md

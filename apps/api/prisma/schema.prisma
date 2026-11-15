@@ -1,0 +1,486 @@
+// Job Hunter data model.
+//
+// Owner-scoped tables always carry `userId` and are queried with a user filter at
+// the repository layer; there is no cross-user read path in the API.
+// Files live in private storage; only opaque storage keys are stored here.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  displayName   String
+  role          String    @default("user")
+  emailVerified Boolean   @default(false)
+  disabledAt    DateTime?
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  profile       CandidateProfile?
+  preferences   JobPreferences?
+  resumes       Resume[]
+  facts         ProfileFact[]
+  consents      UserConsent[]
+  scans         ScanRun[]
+  matches       JobMatch[]
+  documents     GeneratedDocument[]
+  applications  Application[]
+  jobStates     UserJobState[]
+  sessions      BrowserSession[]
+  notifications Notification[]
+  auditEvents   AuditEvent[]
+  refreshTokens RefreshToken[]
+  answerBank    AnswerBankEntry?
+
+  @@index([deletedAt])
+}
+
+/// One-time / revocable refresh tokens (rotation-friendly; hash only).
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Master candidate profile (one per user). `content` is validated JSON.
+model CandidateProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  content   Json
+  headline  String?
+  summary   String?
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JobPreferences {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  targetTitles     String[] @default([])
+  targetKeywords   String[] @default([])
+  excludedKeywords String[] @default([])
+  excludedCompanies String[] @default([])
+  locations        String[] @default([])
+  countryCodes     String[] @default([])
+  remoteOnly       Boolean  @default(false)
+  workplaceTypes   String[] @default([])
+  employmentTypes  String[] @default([])
+  seniorityLevels  String[] @default([])
+  minSalary        Int?
+  salaryCurrency   String?
+  enabledSources   String[] @default([])
+  timeZone         String   @default("UTC")
+  scanHourLocal    Int      @default(8)
+  scheduleEnabled  Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Uploaded resume file metadata. Bytes live in private storage, never here.
+model Resume {
+  id          String    @id @default(uuid())
+  userId      String
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  storageKey  String
+  checksum    String
+  parseStatus String    @default("pending")
+  parseError  String?
+  parsedAt    DateTime?
+  isPrimary   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facts ProfileFact[]
+
+  @@index([userId, deletedAt])
+}
+
+/// A single verifiable claim. Only `verified = true` facts may be evidence.
+model ProfileFact {
+  id           String    @id @default(uuid())
+  userId       String
+  resumeId     String?
+  kind         String
+  label        String
+  detail       String?
+  keywords     String[]  @default([])
+  startDate    String?
+  endDate      String?
+  organisation String?
+  role         String?
+  source       String    @default("manual")
+  verified     Boolean   @default(false)
+  verifiedAt   DateTime?
+  evidenceRef  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@index([userId, verified])
+  @@index([userId, kind])
+}
+
+model JobSource {
+  id           String   @id
+  name         String
+  family       String
+  accessMethod String
+  enabled      Boolean  @default(true)
+  complianceNote String
+  reviewedAt   DateTime?
+  healthState  String   @default("unknown")
+  consecutiveFailures Int @default(0)
+  lastSuccessAt DateTime?
+  lastFailureAt DateTime?
+  lastError    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  records JobSourceRecord[]
+  runs    JobSourceRun[]
+}
+
+model ScanRun {
+  id          String    @id @default(uuid())
+  userId      String
+  trigger     String    @default("manual")
+  status      String    @default("queued")
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  jobsFound   Int       @default(0)
+  jobsNew     Int       @default(0)
+  jobsUpdated Int       @default(0)
+  errorSummary String?
+  idempotencyKey String? @unique
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceRuns JobSourceRun[]
+
+  @@index([userId, startedAt])
+}
+
+model JobSourceRun {
+  id         String   @id @default(uuid())
+  scanRunId  String
+  sourceId   String
+  status     String   @default("pending")
+  fetched    Int      @default(0)
+  durationMs Int      @default(0)
+  error      String?
+  note       String?
+  createdAt  DateTime @default(now())
+
+  scanRun ScanRun   @relation(fields: [scanRunId], references: [id], onDelete: Cascade)
+  source  JobSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([scanRunId, sourceId])
+}
+
+/// Canonical job listing (already deduplicated at ingest).
+model Job {
+  id             String   @id @default(uuid())
+  dedupeKey      String   @unique
+  title          String
+  company        String
+  companyLogoUrl String?
+  description    String
+  url            String
+  source         String
+  externalId     String
+  locationRaw    String?
+  city           String?
+  region         String?
+  countryCode    String?
+  remote         Boolean  @default(false)
+  workplace      String   @default("unknown")
+  employmentType String   @default("unknown")
+  seniority      String   @default("unknown")
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryCurrency String?
+  salaryPeriod   String?
+  tags           String[] @default([])
+  status         String   @default("active")
+  freshness      String   @default("new")
+  postedAt       DateTime?
+  expiresAt      DateTime?
+  firstSeenAt    DateTime @default(now())
+  lastSeenAt     DateTime @default(now())
+  lastCheckedAt  DateTime @default(now())
+
+  records      JobSourceRecord[]
+  matches      JobMatch[]
+  documents    GeneratedDocument[]
+  applications Application[]
+  userStates   UserJobState[]
+
+  @@index([status, freshness])
+  @@index([countryCode])
+  @@index([company])
+  @@index([firstSeenAt])
+}
+
+/// Source-specific identity for a canonical job (attribution preserved).
+model JobSourceRecord {
+  id           String   @id @default(uuid())
+  jobId        String
+  sourceId     String
+  externalId   String
+  url          String
+  sourceKey    String   @unique
+  firstSeenAt  DateTime @default(now())
+  lastSeenAt   DateTime @default(now())
+
+  job    Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  source JobSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, externalId])
+}
+
+model JobMatch {
+  id             String   @id @default(uuid())
+  userId         String
+  jobId          String
+  score          Int
+  band           String
+  excluded       Boolean  @default(false)
+  exclusionReason String?
+  scoringVersion String
+  profileVersion String
+  components     Json
+  evidence       Json
+  gaps           Json
+  usedSemantic   Boolean  @default(false)
+  userFeedback   String?
+  computedAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId, score])
+}
+
+model UserJobState {
+  id        String   @id @default(uuid())
+  userId    String
+  jobId     String
+  saved     Boolean  @default(false)
+  dismissed Boolean  @default(false)
+  viewedAt  DateTime?
+  feedback  String?
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+}
+
+model GeneratedDocument {
+  id            String   @id @default(uuid())
+  userId        String
+  jobId         String
+  kind          String
+  version       Int      @default(1)
+  status        String   @default("draft")
+  content       Json
+  warnings      String[] @default([])
+  providerId    String?
+  model         String?
+  promptVersion String?
+  approvedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId, kind, version])
+  @@index([userId, status])
+}
+
+model Application {
+  id                   String   @id @default(uuid())
+  userId               String
+  jobId                String
+  status               String   @default("saved")
+  resumeDocumentId     String?
+  coverLetterDocumentId String?
+  notes                String?
+  nextActionAt         DateTime?
+  appliedAt            DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  archivedAt           DateTime?
+
+  user   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job    Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  events ApplicationEvent[]
+
+  @@unique([userId, jobId])
+  @@index([userId, status])
+}
+
+model ApplicationEvent {
+  id            String   @id @default(uuid())
+  applicationId String
+  type          String
+  fromStatus    String?
+  toStatus      String?
+  message       String?
+  createdAt     DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
+}
+
+model BrowserSession {
+  id             String   @id @default(uuid())
+  userId         String
+  jobId          String
+  applicationUrl String
+  adapterId      String
+  status         String   @default("pending_consent")
+  pauseReason    String?
+  expiresAt      DateTime
+  endedAt        DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events BrowserActionEvent[]
+
+  @@index([userId, status])
+}
+
+/// Minimal audit metadata only: never page content, values or cookies.
+model BrowserActionEvent {
+  id        String   @id @default(uuid())
+  sessionId String
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+
+  session BrowserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
+
+model AnswerBankEntry {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  answers   Json
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  kind      String
+  title     String
+  body      String?
+  link      String?
+  dedupeKey String
+  readAt    DateTime?
+  emailedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt])
+}
+
+model UserConsent {
+  id        String   @id @default(uuid())
+  userId    String
+  kind      String
+  granted   Boolean
+  version   String
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, createdAt])
+}
+
+model AuditEvent {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+}
+
+/// Postgres-backed job queue (no external broker required).
+model QueueJob {
+  id             String    @id @default(uuid())
+  kind           String
+  payload        Json
+  status         String    @default("queued")
+  attempts       Int       @default(0)
+  maxAttempts    Int       @default(3)
+  runAt          DateTime  @default(now())
+  lockedAt       DateTime?
+  lockedBy       String?
+  lastError      String?
+  idempotencyKey String?   @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status, runAt])
+}
+
+/// Scheduler bookkeeping so daily scans are idempotent per user per day.
+model ScanSchedule {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  enabled      Boolean   @default(true)
+  timeZone     String    @default("UTC")
+  hourLocal    Int       @default(8)
+  lastRunAt    DateTime?
+  nextRunAt    DateTime?
+  lastScanRunId String?
+  updatedAt    DateTime  @updatedAt
+}
