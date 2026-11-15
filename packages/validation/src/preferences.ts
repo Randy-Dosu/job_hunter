@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  DOCUMENT_KINDS,
   EMPLOYMENT_TYPES,
   JOB_SOURCE_IDS,
   SENIORITY_LEVELS,
@@ -30,6 +31,26 @@ export const jobPreferencesSchema = z.object({
   scanHourLocal: z.number().int().min(0).max(23).default(8),
 });
 
+/**
+ * Automatic application *preparation*.
+ *
+ * There is deliberately no `autoSubmit` flag anywhere in this schema: the system
+ * assembles packages, it never sends them. The score floor is bounded so a user
+ * cannot accidentally set "prepare everything", and the daily limit bounds the
+ * work a first run can create.
+ */
+export const autoPrepareSchema = z
+  .object({
+    enabled: z.boolean(),
+    minScore: z.number().int().min(50).max(100).default(75),
+    dailyLimit: z.number().int().min(1).max(50).default(10),
+    documentKinds: z
+      .array(z.enum(DOCUMENT_KINDS))
+      .min(1, 'Prepare at least one document')
+      .default(['resume', 'cover_letter']),
+  })
+  .strict();
+
 export const scheduleSchema = z.object({
   enabled: z.boolean(),
   timeZone: timeZoneSchema,
@@ -38,3 +59,4 @@ export const scheduleSchema = z.object({
 
 export type JobPreferencesInput = z.infer<typeof jobPreferencesSchema>;
 export type ScheduleInput = z.infer<typeof scheduleSchema>;
+export type AutoPrepareInput = z.infer<typeof autoPrepareSchema>;

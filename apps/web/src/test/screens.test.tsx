@@ -513,6 +513,8 @@ describe('document studio', () => {
 describe('application tracker', () => {
   it('reads counts and the status filter from the server payload', async () => {
     stubFetch({
+      '/applications/prepare-queue': () =>
+        json({ items: [], counts: { ready: 0, needsReview: 0 }, remainingToday: 10 }),
       '/applications': () =>
         json({
           items: [
@@ -561,8 +563,43 @@ describe('application tracker', () => {
     expect(screen.getByText(/never submit anything/i)).toBeDefined();
   });
 
+  it('shows prepared packages as drafts that still need the user', async () => {
+    stubFetch({
+      '/applications/prepare-queue': () =>
+        json({
+          items: [
+            {
+              applicationId: '77777777-7777-4777-8777-777777777777',
+              jobId: '44444444-4444-4444-4444-444444444444',
+              title: 'Platform Engineer',
+              company: 'Umbrella',
+              status: 'preparing',
+              preparedAt: new Date().toISOString(),
+              checklist: [],
+            },
+          ],
+          counts: { ready: 0, needsReview: 1 },
+          remainingToday: 9,
+        }),
+      '/applications': () =>
+        json({ items: [], total: 0, page: 1, pageSize: 100, counts: {}, statuses: [] }),
+    });
+
+    renderAt('/applications', <ApplicationsPage />);
+
+    expect(await screen.findByText('Prepared for you')).toBeDefined();
+    expect(screen.getByText('Platform Engineer')).toBeDefined();
+    // The queue must never imply the system sent anything.
+    expect(screen.getByText(/nothing is submitted for you/i)).toBeDefined();
+    expect(screen.getByText(/Draft — needs approval/)).toBeDefined();
+    expect(screen.getByRole('button', { name: /Accept 1 draft/ })).toBeDefined();
+    expect(screen.queryByText(/submitted by/i)).toBeNull();
+  });
+
   it('offers only transitions the server allows', async () => {
     stubFetch({
+      '/applications/prepare-queue': () =>
+        json({ items: [], counts: { ready: 0, needsReview: 0 }, remainingToday: 10 }),
       '/applications': () =>
         json({
           items: [

@@ -27,6 +27,7 @@ export async function registerDashboardRoutes(
       unverifiedFacts,
       resumeCount,
       documentsAwaitingReview,
+      awaitingReviewCount,
     ] = await Promise.all([
       db.job.count({ where: { firstSeenAt: { gte: since24h }, status: 'active' } }),
       db.job.count({ where: { status: 'active' } }),
@@ -58,6 +59,10 @@ export async function registerDashboardRoutes(
       db.resume.count({ where: { userId: user.userId, deletedAt: null } }),
       db.generatedDocument.count({
         where: { userId: user.userId, status: { in: ['draft', 'needs_review'] } },
+      }),
+      // Applications the system prepared that are waiting on the user.
+      db.application.count({
+        where: { userId: user.userId, archivedAt: null, status: 'ready_for_user' },
       }),
     ]);
 
@@ -111,6 +116,7 @@ export async function registerDashboardRoutes(
       },
       applications: {
         total: applicationCounts.reduce((sum, row) => sum + row._count._all, 0),
+        awaitingReview: awaitingReviewCount,
         byStatus: Object.fromEntries(applicationCounts.map((row) => [row.status, row._count._all])),
         upcoming: upcomingActions.map((application) => ({
           id: application.id,

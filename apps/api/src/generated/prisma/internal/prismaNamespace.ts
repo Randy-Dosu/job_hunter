@@ -2353,6 +2353,10 @@ export const JobPreferencesScalarFieldEnum = {
   scheduleEnabled: 'scheduleEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
+  autoPrepareEnabled: 'autoPrepareEnabled',
+  autoPrepareMinScore: 'autoPrepareMinScore',
+  autoPrepareDailyLimit: 'autoPrepareDailyLimit',
+  autoPrepareDocumentKinds: 'autoPrepareDocumentKinds',
 } as const;
 
 export type JobPreferencesScalarFieldEnum =
@@ -2561,6 +2565,9 @@ export const ApplicationScalarFieldEnum = {
   userId: 'userId',
   jobId: 'jobId',
   status: 'status',
+  origin: 'origin',
+  preparedAt: 'preparedAt',
+  reviewChecklist: 'reviewChecklist',
   resumeDocumentId: 'resumeDocumentId',
   coverLetterDocumentId: 'coverLetterDocumentId',
   notes: 'notes',

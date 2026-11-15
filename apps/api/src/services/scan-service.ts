@@ -25,6 +25,8 @@ import { toJobPreferences } from './auth-service.js';
 import { scoreJob } from '@job-hunter/matching';
 import { toFactDto } from '../routes/profile.js';
 import { NotificationService } from './notification-service.js';
+import { PreparationService } from './preparation-service.js';
+import type { AIGateway } from '@job-hunter/ai-gateway';
 
 export interface ScanServiceOptions {
   db: Database;
@@ -33,6 +35,8 @@ export interface ScanServiceOptions {
   fetchImpl?: typeof globalThis.fetch | undefined;
   now?: (() => Date) | undefined;
   maxPagesPerSource?: number | undefined;
+  /** Needed for automatic application preparation; omitted in scan-only tests. */
+  ai?: AIGateway | undefined;
 }
 
 export interface ScanSummary {
@@ -178,6 +182,35 @@ export class ScanService {
       },
       include: { sourceRuns: true },
     });
+
+    // Automatic application preparation runs *after* scoring, so it can select
+    // on the fresh match scores. It assembles packages; it never sends them.
+    // A preparation failure must not fail the scan itself.
+    if (this.options.ai) {
+      try {
+        const preparation = new PreparationService({
+          db,
+          logger: this.options.logger,
+          ai: this.options.ai,
+          now: () => this.now(),
+        });
+        const prepared = await preparation.prepareForUser({
+          userId: input.userId,
+          trigger: 'scheduled',
+        });
+        if (prepared.prepared > 0) {
+          this.options.logger.info('auto-prepare: packages assembled', {
+            userId: input.userId,
+            prepared: prepared.prepared,
+          });
+        }
+      } catch (error) {
+        this.options.logger.warn('auto-prepare: run failed', {
+          userId: input.userId,
+          error: error instanceof Error ? error.message.slice(0, 200) : 'unknown',
+        });
+      }
+    }
 
     // Notify once per scan (deduplicated), and flag the best new matches.
     await this.notifications.notifyScanComplete({

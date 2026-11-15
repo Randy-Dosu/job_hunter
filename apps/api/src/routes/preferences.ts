@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { jobPreferencesSchema, scheduleSchema } from '@job-hunter/validation';
+import { autoPrepareSchema, jobPreferencesSchema, scheduleSchema } from '@job-hunter/validation';
 import {
   AUTOMATED_CONNECTORS,
   SOURCE_REGISTER,
@@ -22,6 +22,15 @@ export async function registerPreferencesRoutes(
     const schedule = await db.scanSchedule.findUnique({ where: { userId: user.userId } });
     return {
       preferences: row ? toJobPreferences(row) : null,
+      // Preparation, not submission: the system assembles, the user sends.
+      autoPrepare: row
+        ? {
+            enabled: row.autoPrepareEnabled,
+            minScore: row.autoPrepareMinScore,
+            dailyLimit: row.autoPrepareDailyLimit,
+            documentKinds: row.autoPrepareDocumentKinds,
+          }
+        : null,
       schedule: schedule
         ? {
             enabled: schedule.enabled,
@@ -92,6 +101,53 @@ export async function registerPreferencesRoutes(
     });
 
     return { preferences: toJobPreferences(row) };
+  });
+
+  /**
+   * Turn automatic application preparation on/off and set its limits.
+   *
+   * There is no `submit` field, here or anywhere else. Enabling this lets the
+   * system build packages for matching jobs; it never sends them, and the
+   * response says so.
+   */
+  app.put('/preferences/auto-prepare', async (request) => {
+    const user = requireUser(request);
+    const input = autoPrepareSchema.parse(request.body);
+
+    const row = await db.jobPreferences.upsert({
+      where: { userId: user.userId },
+      create: {
+        userId: user.userId,
+        autoPrepareEnabled: input.enabled,
+        autoPrepareMinScore: input.minScore,
+        autoPrepareDailyLimit: input.dailyLimit,
+        autoPrepareDocumentKinds: input.documentKinds,
+      },
+      update: {
+        autoPrepareEnabled: input.enabled,
+        autoPrepareMinScore: input.minScore,
+        autoPrepareDailyLimit: input.dailyLimit,
+        autoPrepareDocumentKinds: input.documentKinds,
+      },
+    });
+
+    await recordAudit(db, context.logger, {
+      userId: user.userId,
+      action: 'preferences.updated',
+      entityType: 'job_preferences',
+      entityId: row.id,
+    });
+
+    return {
+      autoPrepare: {
+        enabled: row.autoPrepareEnabled,
+        minScore: row.autoPrepareMinScore,
+        dailyLimit: row.autoPrepareDailyLimit,
+        documentKinds: row.autoPrepareDocumentKinds,
+      },
+      // Stated on every write so no client can imply otherwise.
+      guarantee: 'Prepared packages are never submitted. You review and send each one yourself.',
+    };
   });
 
   /** Pause/resume the daily scan and set the local run hour. */

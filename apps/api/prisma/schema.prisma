@@ -95,6 +95,17 @@ model JobPreferences {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  /// Application preparation (not submission). When enabled, the system
+  /// assembles application packages for matching jobs on its own; the user
+  /// still reviews and sends each one. Off unless the user turns it on.
+  autoPrepareEnabled Boolean @default(false)
+  /// Minimum match score a job must reach to be prepared automatically.
+  autoPrepareMinScore Int    @default(75)
+  /// Cap per rolling 24h so a first run cannot queue the entire feed.
+  autoPrepareDailyLimit Int  @default(10)
+  /// Required kinds before a package counts as ready: resume, cover_letter, both.
+  autoPrepareDocumentKinds String[] @default(["resume", "cover_letter"])
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -335,6 +346,14 @@ model Application {
   userId               String
   jobId                String
   status               String   @default("saved")
+  /// How this record came to exist. "manual" or "auto_prepare"; kept so the
+  /// UI can be explicit about work the system did on the user's behalf.
+  origin               String   @default("manual")
+  /// Set when a package was assembled by the system, unset if the user edits it.
+  preparedAt           DateTime?
+  /// Reasons the package is not send-ready yet (unanswered fields, missing
+  /// documents, a site that forbids automation). Empty means ready.
+  reviewChecklist      String[] @default([])
   resumeDocumentId     String?
   coverLetterDocumentId String?
   notes                String?
@@ -350,6 +369,7 @@ model Application {
 
   @@unique([userId, jobId])
   @@index([userId, status])
+  @@index([userId, origin, status])
 }
 
 model ApplicationEvent {

@@ -10,6 +10,7 @@ import { useAuth } from '../lib/auth.js';
 import { ApiError, download, request } from '../lib/api.js';
 import { useAsync } from '../lib/use-async.js';
 import type {
+  AutoPrepareSettings,
   AuditEvent,
   JobPreferences,
   PreferencesResponse,
@@ -315,7 +316,139 @@ function SearchSettings() {
       </Card>
 
       <ScheduleCard schedule={schedule} onSaved={data.reload} />
+
+      <AutoPrepareCard settings={data.data?.autoPrepare} onSaved={data.reload} />
     </div>
+  );
+}
+
+/**
+ * Automatic application *preparation*.
+ *
+ * The copy here is deliberate and load-bearing: it says what the system does
+ * (assemble a package) and what it does not do (send it). A settings screen that
+ * implied otherwise would be the single most misleading thing in the product.
+ */
+function AutoPrepareCard({
+  settings,
+  onSaved,
+}: {
+  settings: AutoPrepareSettings | null | undefined;
+  onSaved: () => void;
+}) {
+  const [enabled, setEnabled] = useState(settings?.enabled ?? false);
+  const [minScore, setMinScore] = useState(settings?.minScore ?? 75);
+  const [dailyLimit, setDailyLimit] = useState(settings?.dailyLimit ?? 10);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const [notice, setNotice] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (!settings) return;
+    setEnabled(settings.enabled);
+    setMinScore(settings.minScore);
+    setDailyLimit(settings.dailyLimit);
+  }, [settings]);
+
+  const save = async (): Promise<void> => {
+    setSaving(true);
+    setError(undefined);
+    setNotice(undefined);
+    try {
+      await request('/preferences/auto-prepare', {
+        method: 'PUT',
+        body: {
+          enabled,
+          minScore,
+          dailyLimit,
+          documentKinds: settings?.documentKinds ?? ['resume', 'cover_letter'],
+        },
+      });
+      setNotice(
+        enabled
+          ? 'Saved. Matching jobs will be prepared after each scan — you still send every application.'
+          : 'Saved. Automatic preparation is off.',
+      );
+      onSaved();
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : 'Could not save this setting.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader
+        title="Prepare applications for me"
+        description="We pick matching jobs, write the CV and cover letter from your verified facts, and queue them for you."
+        action={<Badge tone={enabled ? 'success' : 'neutral'}>{enabled ? 'On' : 'Off'}</Badge>}
+      />
+      <div className="grid gap-4 p-5 sm:grid-cols-2">
+        {error ? (
+          <div className="sm:col-span-2">
+            <Alert tone="danger">{error}</Alert>
+          </div>
+        ) : null}
+        {notice ? (
+          <div className="sm:col-span-2">
+            <Alert tone="success">{notice}</Alert>
+          </div>
+        ) : null}
+
+        <div className="sm:col-span-2">
+          <Checkbox
+            label="Prepare applications automatically"
+            description="Applies your saved titles, keywords, locations and exclusions. Nothing is ever submitted — a prepared package waits for you in the review queue."
+            checked={enabled}
+            onChange={(event) => setEnabled(event.target.checked)}
+          />
+        </div>
+
+        <Field label="Minimum match score" hint="Only jobs at or above this score are prepared">
+          {(id) => (
+            <Select
+              id={id}
+              value={minScore}
+              onChange={(event) => setMinScore(Number(event.target.value))}
+            >
+              {[60, 65, 70, 75, 80, 85, 90].map((value) => (
+                <option key={value} value={value}>
+                  {value} and above
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+
+        <Field label="Most per day" hint="A safety cap on how much we prepare at once">
+          {(id) => (
+            <Select
+              id={id}
+              value={dailyLimit}
+              onChange={(event) => setDailyLimit(Number(event.target.value))}
+            >
+              {[5, 10, 15, 20, 25].map((value) => (
+                <option key={value} value={value}>
+                  {value} applications
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+
+        <div className="flex items-end">
+          <Button loading={saving} onClick={() => void save()}>
+            Save
+          </Button>
+        </div>
+
+        <p className="text-xs text-slate-500 sm:col-span-2 dark:text-slate-400">
+          We prepare; you review and send. Documents still need your approval before they can leave
+          the app — only you can confirm a claim about your own career is true.
+        </p>
+      </div>
+    </Card>
   );
 }
 

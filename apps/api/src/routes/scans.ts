@@ -14,6 +14,8 @@ export async function registerScanRoutes(app: FastifyInstance, context: AppConte
     logger: context.logger,
     userAgent: env.JOB_USER_AGENT,
     ...(context.now ? { now: context.now } : {}),
+    // Enables automatic application preparation after scoring.
+    ai: context.ai,
   });
 
   /** Manual scan — the primary "find jobs now" action. */

@@ -153,6 +153,7 @@ export interface ScanSchedule {
 export interface PreferencesResponse {
   preferences: JobPreferences | null;
   schedule: ScanSchedule | null;
+  autoPrepare?: AutoPrepareSettings | null;
 }
 
 export interface PrivacySummary {
@@ -313,6 +314,14 @@ export interface Application {
   id: string;
   status: ApplicationStatus;
   statusLabel: string;
+  /**
+   * `auto_prepare` means the system assembled this package. It never means the
+   * system applied — that is still only ever the user's own action.
+   */
+  origin?: 'manual' | 'auto_prepare';
+  preparedAt?: string | null;
+  /** Reasons the package is not send-ready. Empty means ready for you. */
+  reviewChecklist?: string[];
   notes?: string | null;
   nextActionAt?: string | null;
   appliedAt?: string | null;
@@ -329,6 +338,29 @@ export interface Application {
     locationRaw?: string | null;
   } | null;
   lastEvent?: { type: string; message?: string | null; createdAt: string } | null;
+}
+
+/** `GET /applications/prepare-queue` — packages the system assembled. */
+export interface PrepareQueueResponse {
+  items: Array<{
+    applicationId: string;
+    jobId: string;
+    title: string;
+    company: string;
+    status: string;
+    preparedAt: string | null;
+    checklist: string[];
+  }>;
+  counts: { ready: number; needsReview: number };
+  remainingToday: number;
+}
+
+/** `PUT /preferences/auto-prepare` — preparation, never submission. */
+export interface AutoPrepareSettings {
+  enabled: boolean;
+  minScore: number;
+  dailyLimit: number;
+  documentKinds: Array<'resume' | 'cover_letter'>;
 }
 
 export interface ApplicationListResponse {
@@ -422,6 +454,8 @@ export interface DashboardResponse {
   };
   applications: {
     total: number;
+    /** Prepared by the system and waiting on the user. */
+    awaitingReview?: number;
     byStatus: Record<string, number>;
     upcoming: Array<{
       id: string;

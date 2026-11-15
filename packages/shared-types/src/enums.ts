@@ -143,6 +143,29 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   closed: 'Closed',
 };
 
+/**
+ * Who created an application record.
+ *
+ * `auto_prepare` means the *system* assembled the package — job match, tailored
+ * documents, review checklist. It never means the system applied: `applied` is
+ * still only reachable by the user saying so.
+ */
+export const APPLICATION_ORIGINS = ['manual', 'auto_prepare'] as const;
+export type ApplicationOrigin = (typeof APPLICATION_ORIGINS)[number];
+
+/**
+ * Why a prepared package still needs the user. Rendered verbatim in the review
+ * queue, so each entry must read as an instruction, not a status code.
+ */
+export const APPLICATION_CHECKLIST_ITEMS = [
+  'Verify at least one career fact so documents can be built from evidence.',
+  'Approve the tailored resume.',
+  'Approve the tailored cover letter.',
+  'Confirm you meet the posting’s location and eligibility requirements.',
+  'This site does not permit automated form filling — apply manually using the prepared documents.',
+] as const;
+export type ApplicationChecklistItem = (typeof APPLICATION_CHECKLIST_ITEMS)[number];
+
 /** Allowed status transitions. Prevents nonsensical history (e.g. offer -> saved). */
 export const APPLICATION_STATUS_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
   saved: ['preparing', 'ready_for_user', 'withdrawn', 'closed'],
@@ -238,6 +261,8 @@ export const AUDIT_ACTIONS = [
   'browser_session.paused',
   'browser_session.ended',
   'application.created',
+  'application.prepared',
+  'application.accepted',
   'application.status_changed',
   'consent.recorded',
   'data.exported',

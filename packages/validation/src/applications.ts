@@ -19,6 +19,20 @@ export const updateApplicationSchema = z.object({
   coverLetterDocumentId: z.string().uuid().nullable().optional(),
 });
 
+/**
+ * Preparing (or re-preparing) a package by hand, for jobs the automatic run
+ * skipped. `jobIds` is explicit: preparation is never a fire-and-forget "do
+ * everything" button, and the response reports each job's outcome.
+ */
+export const prepareApplicationsSchema = z.object({
+  jobIds: z.array(z.string().uuid()).min(1, 'Select at least one job').max(50),
+});
+
+/** Accept several packages at once, from the review queue. */
+export const acceptPreparedApplicationsSchema = z.object({
+  applicationIds: z.array(z.string().uuid()).min(1, 'Select at least one application').max(50),
+});
+
 export const addApplicationNoteSchema = z.object({
   message: trimmedString(2000).min(1, 'Note cannot be empty'),
 });
@@ -31,3 +45,5 @@ export const applicationListQuerySchema = z.object({
 
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
 export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;
+export type PrepareApplicationsInput = z.infer<typeof prepareApplicationsSchema>;
+export type AcceptPreparedApplicationsInput = z.infer<typeof acceptPreparedApplicationsSchema>;

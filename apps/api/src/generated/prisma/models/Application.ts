@@ -28,6 +28,8 @@ export type ApplicationMinAggregateOutputType = {
   userId: string | null;
   jobId: string | null;
   status: string | null;
+  origin: string | null;
+  preparedAt: Date | null;
   resumeDocumentId: string | null;
   coverLetterDocumentId: string | null;
   notes: string | null;
@@ -43,6 +45,8 @@ export type ApplicationMaxAggregateOutputType = {
   userId: string | null;
   jobId: string | null;
   status: string | null;
+  origin: string | null;
+  preparedAt: Date | null;
   resumeDocumentId: string | null;
   coverLetterDocumentId: string | null;
   notes: string | null;
@@ -58,6 +62,9 @@ export type ApplicationCountAggregateOutputType = {
   userId: number;
   jobId: number;
   status: number;
+  origin: number;
+  preparedAt: number;
+  reviewChecklist: number;
   resumeDocumentId: number;
   coverLetterDocumentId: number;
   notes: number;
@@ -74,6 +81,8 @@ export type ApplicationMinAggregateInputType = {
   userId?: true;
   jobId?: true;
   status?: true;
+  origin?: true;
+  preparedAt?: true;
   resumeDocumentId?: true;
   coverLetterDocumentId?: true;
   notes?: true;
@@ -89,6 +98,8 @@ export type ApplicationMaxAggregateInputType = {
   userId?: true;
   jobId?: true;
   status?: true;
+  origin?: true;
+  preparedAt?: true;
   resumeDocumentId?: true;
   coverLetterDocumentId?: true;
   notes?: true;
@@ -104,6 +115,9 @@ export type ApplicationCountAggregateInputType = {
   userId?: true;
   jobId?: true;
   status?: true;
+  origin?: true;
+  preparedAt?: true;
+  reviewChecklist?: true;
   resumeDocumentId?: true;
   coverLetterDocumentId?: true;
   notes?: true;
@@ -195,6 +209,9 @@ export type ApplicationGroupByOutputType = {
   userId: string;
   jobId: string;
   status: string;
+  origin: string;
+  preparedAt: Date | null;
+  reviewChecklist: string[];
   resumeDocumentId: string | null;
   coverLetterDocumentId: string | null;
   notes: string | null;
@@ -228,6 +245,9 @@ export type ApplicationWhereInput = {
   userId?: Prisma.StringFilter<'Application'> | string;
   jobId?: Prisma.StringFilter<'Application'> | string;
   status?: Prisma.StringFilter<'Application'> | string;
+  origin?: Prisma.StringFilter<'Application'> | string;
+  preparedAt?: Prisma.DateTimeNullableFilter<'Application'> | Date | string | null;
+  reviewChecklist?: Prisma.StringNullableListFilter<'Application'>;
   resumeDocumentId?: Prisma.StringNullableFilter<'Application'> | string | null;
   coverLetterDocumentId?: Prisma.StringNullableFilter<'Application'> | string | null;
   notes?: Prisma.StringNullableFilter<'Application'> | string | null;
@@ -246,6 +266,9 @@ export type ApplicationOrderByWithRelationInput = {
   userId?: Prisma.SortOrder;
   jobId?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  origin?: Prisma.SortOrder;
+  preparedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
+  reviewChecklist?: Prisma.SortOrder;
   resumeDocumentId?: Prisma.SortOrderInput | Prisma.SortOrder;
   coverLetterDocumentId?: Prisma.SortOrderInput | Prisma.SortOrder;
   notes?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -269,6 +292,9 @@ export type ApplicationWhereUniqueInput = Prisma.AtLeast<
     userId?: Prisma.StringFilter<'Application'> | string;
     jobId?: Prisma.StringFilter<'Application'> | string;
     status?: Prisma.StringFilter<'Application'> | string;
+    origin?: Prisma.StringFilter<'Application'> | string;
+    preparedAt?: Prisma.DateTimeNullableFilter<'Application'> | Date | string | null;
+    reviewChecklist?: Prisma.StringNullableListFilter<'Application'>;
     resumeDocumentId?: Prisma.StringNullableFilter<'Application'> | string | null;
     coverLetterDocumentId?: Prisma.StringNullableFilter<'Application'> | string | null;
     notes?: Prisma.StringNullableFilter<'Application'> | string | null;
@@ -289,6 +315,9 @@ export type ApplicationOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder;
   jobId?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  origin?: Prisma.SortOrder;
+  preparedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
+  reviewChecklist?: Prisma.SortOrder;
   resumeDocumentId?: Prisma.SortOrderInput | Prisma.SortOrder;
   coverLetterDocumentId?: Prisma.SortOrderInput | Prisma.SortOrder;
   notes?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -314,6 +343,9 @@ export type ApplicationScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<'Application'> | string;
   jobId?: Prisma.StringWithAggregatesFilter<'Application'> | string;
   status?: Prisma.StringWithAggregatesFilter<'Application'> | string;
+  origin?: Prisma.StringWithAggregatesFilter<'Application'> | string;
+  preparedAt?: Prisma.DateTimeNullableWithAggregatesFilter<'Application'> | Date | string | null;
+  reviewChecklist?: Prisma.StringNullableListFilter<'Application'>;
   resumeDocumentId?: Prisma.StringNullableWithAggregatesFilter<'Application'> | string | null;
   coverLetterDocumentId?: Prisma.StringNullableWithAggregatesFilter<'Application'> | string | null;
   notes?: Prisma.StringNullableWithAggregatesFilter<'Application'> | string | null;
@@ -327,6 +359,9 @@ export type ApplicationScalarWhereWithAggregatesInput = {
 export type ApplicationCreateInput = {
   id?: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -345,6 +380,9 @@ export type ApplicationUncheckedCreateInput = {
   userId: string;
   jobId: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -359,6 +397,9 @@ export type ApplicationUncheckedCreateInput = {
 export type ApplicationUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -377,6 +418,9 @@ export type ApplicationUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string;
   jobId?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -393,6 +437,9 @@ export type ApplicationCreateManyInput = {
   userId: string;
   jobId: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -406,6 +453,9 @@ export type ApplicationCreateManyInput = {
 export type ApplicationUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -421,6 +471,9 @@ export type ApplicationUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string;
   jobId?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -451,6 +504,9 @@ export type ApplicationCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder;
   jobId?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  origin?: Prisma.SortOrder;
+  preparedAt?: Prisma.SortOrder;
+  reviewChecklist?: Prisma.SortOrder;
   resumeDocumentId?: Prisma.SortOrder;
   coverLetterDocumentId?: Prisma.SortOrder;
   notes?: Prisma.SortOrder;
@@ -466,6 +522,8 @@ export type ApplicationMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder;
   jobId?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  origin?: Prisma.SortOrder;
+  preparedAt?: Prisma.SortOrder;
   resumeDocumentId?: Prisma.SortOrder;
   coverLetterDocumentId?: Prisma.SortOrder;
   notes?: Prisma.SortOrder;
@@ -481,6 +539,8 @@ export type ApplicationMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder;
   jobId?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  origin?: Prisma.SortOrder;
+  preparedAt?: Prisma.SortOrder;
   resumeDocumentId?: Prisma.SortOrder;
   coverLetterDocumentId?: Prisma.SortOrder;
   notes?: Prisma.SortOrder;
@@ -668,6 +728,15 @@ export type ApplicationUncheckedUpdateManyWithoutJobNestedInput = {
   deleteMany?: Prisma.ApplicationScalarWhereInput | Prisma.ApplicationScalarWhereInput[];
 };
 
+export type ApplicationCreatereviewChecklistInput = {
+  set: string[];
+};
+
+export type ApplicationUpdatereviewChecklistInput = {
+  set?: string[];
+  push?: string | string[];
+};
+
 export type ApplicationCreateNestedOneWithoutEventsInput = {
   create?: Prisma.XOR<
     Prisma.ApplicationCreateWithoutEventsInput,
@@ -697,6 +766,9 @@ export type ApplicationUpdateOneRequiredWithoutEventsNestedInput = {
 export type ApplicationCreateWithoutUserInput = {
   id?: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -713,6 +785,9 @@ export type ApplicationUncheckedCreateWithoutUserInput = {
   id?: string;
   jobId: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -773,6 +848,9 @@ export type ApplicationScalarWhereInput = {
   userId?: Prisma.StringFilter<'Application'> | string;
   jobId?: Prisma.StringFilter<'Application'> | string;
   status?: Prisma.StringFilter<'Application'> | string;
+  origin?: Prisma.StringFilter<'Application'> | string;
+  preparedAt?: Prisma.DateTimeNullableFilter<'Application'> | Date | string | null;
+  reviewChecklist?: Prisma.StringNullableListFilter<'Application'>;
   resumeDocumentId?: Prisma.StringNullableFilter<'Application'> | string | null;
   coverLetterDocumentId?: Prisma.StringNullableFilter<'Application'> | string | null;
   notes?: Prisma.StringNullableFilter<'Application'> | string | null;
@@ -786,6 +864,9 @@ export type ApplicationScalarWhereInput = {
 export type ApplicationCreateWithoutJobInput = {
   id?: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -802,6 +883,9 @@ export type ApplicationUncheckedCreateWithoutJobInput = {
   id?: string;
   userId: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -857,6 +941,9 @@ export type ApplicationUpdateManyWithWhereWithoutJobInput = {
 export type ApplicationCreateWithoutEventsInput = {
   id?: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -874,6 +961,9 @@ export type ApplicationUncheckedCreateWithoutEventsInput = {
   userId: string;
   jobId: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -915,6 +1005,9 @@ export type ApplicationUpdateToOneWithWhereWithoutEventsInput = {
 export type ApplicationUpdateWithoutEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -932,6 +1025,9 @@ export type ApplicationUncheckedUpdateWithoutEventsInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string;
   jobId?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -946,6 +1042,9 @@ export type ApplicationCreateManyUserInput = {
   id?: string;
   jobId: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -959,6 +1058,9 @@ export type ApplicationCreateManyUserInput = {
 export type ApplicationUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -975,6 +1077,9 @@ export type ApplicationUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   jobId?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -990,6 +1095,9 @@ export type ApplicationUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   jobId?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -1004,6 +1112,9 @@ export type ApplicationCreateManyJobInput = {
   id?: string;
   userId: string;
   status?: string;
+  origin?: string;
+  preparedAt?: Date | string | null;
+  reviewChecklist?: Prisma.ApplicationCreatereviewChecklistInput | string[];
   resumeDocumentId?: string | null;
   coverLetterDocumentId?: string | null;
   notes?: string | null;
@@ -1017,6 +1128,9 @@ export type ApplicationCreateManyJobInput = {
 export type ApplicationUpdateWithoutJobInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -1033,6 +1147,9 @@ export type ApplicationUncheckedUpdateWithoutJobInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   userId?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -1048,6 +1165,9 @@ export type ApplicationUncheckedUpdateManyWithoutJobInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
   userId?: Prisma.StringFieldUpdateOperationsInput | string;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?: Prisma.StringFieldUpdateOperationsInput | string;
+  preparedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  reviewChecklist?: Prisma.ApplicationUpdatereviewChecklistInput | string[];
   resumeDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   coverLetterDocumentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
@@ -1101,6 +1221,9 @@ export type ApplicationSelect<
     userId?: boolean;
     jobId?: boolean;
     status?: boolean;
+    origin?: boolean;
+    preparedAt?: boolean;
+    reviewChecklist?: boolean;
     resumeDocumentId?: boolean;
     coverLetterDocumentId?: boolean;
     notes?: boolean;
@@ -1125,6 +1248,9 @@ export type ApplicationSelectCreateManyAndReturn<
     userId?: boolean;
     jobId?: boolean;
     status?: boolean;
+    origin?: boolean;
+    preparedAt?: boolean;
+    reviewChecklist?: boolean;
     resumeDocumentId?: boolean;
     coverLetterDocumentId?: boolean;
     notes?: boolean;
@@ -1147,6 +1273,9 @@ export type ApplicationSelectUpdateManyAndReturn<
     userId?: boolean;
     jobId?: boolean;
     status?: boolean;
+    origin?: boolean;
+    preparedAt?: boolean;
+    reviewChecklist?: boolean;
     resumeDocumentId?: boolean;
     coverLetterDocumentId?: boolean;
     notes?: boolean;
@@ -1166,6 +1295,9 @@ export type ApplicationSelectScalar = {
   userId?: boolean;
   jobId?: boolean;
   status?: boolean;
+  origin?: boolean;
+  preparedAt?: boolean;
+  reviewChecklist?: boolean;
   resumeDocumentId?: boolean;
   coverLetterDocumentId?: boolean;
   notes?: boolean;
@@ -1183,6 +1315,9 @@ export type ApplicationOmit<
   | 'userId'
   | 'jobId'
   | 'status'
+  | 'origin'
+  | 'preparedAt'
+  | 'reviewChecklist'
   | 'resumeDocumentId'
   | 'coverLetterDocumentId'
   | 'notes'
@@ -1229,6 +1364,20 @@ export type $ApplicationPayload<
       userId: string;
       jobId: string;
       status: string;
+      /**
+       * How this record came to exist. "manual" or "auto_prepare"; kept so the
+       * UI can be explicit about work the system did on the user's behalf.
+       */
+      origin: string;
+      /**
+       * Set when a package was assembled by the system, unset if the user edits it.
+       */
+      preparedAt: Date | null;
+      /**
+       * Reasons the package is not send-ready yet (unanswered fields, missing
+       * documents, a site that forbids automation). Empty means ready.
+       */
+      reviewChecklist: string[];
       resumeDocumentId: string | null;
       coverLetterDocumentId: string | null;
       notes: string | null;
@@ -1849,6 +1998,9 @@ export interface ApplicationFieldRefs {
   readonly userId: Prisma.FieldRef<'Application', 'String'>;
   readonly jobId: Prisma.FieldRef<'Application', 'String'>;
   readonly status: Prisma.FieldRef<'Application', 'String'>;
+  readonly origin: Prisma.FieldRef<'Application', 'String'>;
+  readonly preparedAt: Prisma.FieldRef<'Application', 'DateTime'>;
+  readonly reviewChecklist: Prisma.FieldRef<'Application', 'String[]'>;
   readonly resumeDocumentId: Prisma.FieldRef<'Application', 'String'>;
   readonly coverLetterDocumentId: Prisma.FieldRef<'Application', 'String'>;
   readonly notes: Prisma.FieldRef<'Application', 'String'>;

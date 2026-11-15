@@ -29,11 +29,15 @@ export type AggregateJobPreferences = {
 export type JobPreferencesAvgAggregateOutputType = {
   minSalary: number | null;
   scanHourLocal: number | null;
+  autoPrepareMinScore: number | null;
+  autoPrepareDailyLimit: number | null;
 };
 
 export type JobPreferencesSumAggregateOutputType = {
   minSalary: number | null;
   scanHourLocal: number | null;
+  autoPrepareMinScore: number | null;
+  autoPrepareDailyLimit: number | null;
 };
 
 export type JobPreferencesMinAggregateOutputType = {
@@ -47,6 +51,9 @@ export type JobPreferencesMinAggregateOutputType = {
   scheduleEnabled: boolean | null;
   createdAt: Date | null;
   updatedAt: Date | null;
+  autoPrepareEnabled: boolean | null;
+  autoPrepareMinScore: number | null;
+  autoPrepareDailyLimit: number | null;
 };
 
 export type JobPreferencesMaxAggregateOutputType = {
@@ -60,6 +67,9 @@ export type JobPreferencesMaxAggregateOutputType = {
   scheduleEnabled: boolean | null;
   createdAt: Date | null;
   updatedAt: Date | null;
+  autoPrepareEnabled: boolean | null;
+  autoPrepareMinScore: number | null;
+  autoPrepareDailyLimit: number | null;
 };
 
 export type JobPreferencesCountAggregateOutputType = {
@@ -83,17 +93,25 @@ export type JobPreferencesCountAggregateOutputType = {
   scheduleEnabled: number;
   createdAt: number;
   updatedAt: number;
+  autoPrepareEnabled: number;
+  autoPrepareMinScore: number;
+  autoPrepareDailyLimit: number;
+  autoPrepareDocumentKinds: number;
   _all: number;
 };
 
 export type JobPreferencesAvgAggregateInputType = {
   minSalary?: true;
   scanHourLocal?: true;
+  autoPrepareMinScore?: true;
+  autoPrepareDailyLimit?: true;
 };
 
 export type JobPreferencesSumAggregateInputType = {
   minSalary?: true;
   scanHourLocal?: true;
+  autoPrepareMinScore?: true;
+  autoPrepareDailyLimit?: true;
 };
 
 export type JobPreferencesMinAggregateInputType = {
@@ -107,6 +125,9 @@ export type JobPreferencesMinAggregateInputType = {
   scheduleEnabled?: true;
   createdAt?: true;
   updatedAt?: true;
+  autoPrepareEnabled?: true;
+  autoPrepareMinScore?: true;
+  autoPrepareDailyLimit?: true;
 };
 
 export type JobPreferencesMaxAggregateInputType = {
@@ -120,6 +141,9 @@ export type JobPreferencesMaxAggregateInputType = {
   scheduleEnabled?: true;
   createdAt?: true;
   updatedAt?: true;
+  autoPrepareEnabled?: true;
+  autoPrepareMinScore?: true;
+  autoPrepareDailyLimit?: true;
 };
 
 export type JobPreferencesCountAggregateInputType = {
@@ -143,6 +167,10 @@ export type JobPreferencesCountAggregateInputType = {
   scheduleEnabled?: true;
   createdAt?: true;
   updatedAt?: true;
+  autoPrepareEnabled?: true;
+  autoPrepareMinScore?: true;
+  autoPrepareDailyLimit?: true;
+  autoPrepareDocumentKinds?: true;
   _all?: true;
 };
 
@@ -257,6 +285,10 @@ export type JobPreferencesGroupByOutputType = {
   scheduleEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
+  autoPrepareEnabled: boolean;
+  autoPrepareMinScore: number;
+  autoPrepareDailyLimit: number;
+  autoPrepareDocumentKinds: string[];
   _count: JobPreferencesCountAggregateOutputType | null;
   _avg: JobPreferencesAvgAggregateOutputType | null;
   _sum: JobPreferencesSumAggregateOutputType | null;
@@ -301,6 +333,10 @@ export type JobPreferencesWhereInput = {
   scheduleEnabled?: Prisma.BoolFilter<'JobPreferences'> | boolean;
   createdAt?: Prisma.DateTimeFilter<'JobPreferences'> | Date | string;
   updatedAt?: Prisma.DateTimeFilter<'JobPreferences'> | Date | string;
+  autoPrepareEnabled?: Prisma.BoolFilter<'JobPreferences'> | boolean;
+  autoPrepareMinScore?: Prisma.IntFilter<'JobPreferences'> | number;
+  autoPrepareDailyLimit?: Prisma.IntFilter<'JobPreferences'> | number;
+  autoPrepareDocumentKinds?: Prisma.StringNullableListFilter<'JobPreferences'>;
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
 };
 
@@ -325,6 +361,10 @@ export type JobPreferencesOrderByWithRelationInput = {
   scheduleEnabled?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
+  autoPrepareEnabled?: Prisma.SortOrder;
+  autoPrepareMinScore?: Prisma.SortOrder;
+  autoPrepareDailyLimit?: Prisma.SortOrder;
+  autoPrepareDocumentKinds?: Prisma.SortOrder;
   user?: Prisma.UserOrderByWithRelationInput;
 };
 
@@ -353,6 +393,10 @@ export type JobPreferencesWhereUniqueInput = Prisma.AtLeast<
     scheduleEnabled?: Prisma.BoolFilter<'JobPreferences'> | boolean;
     createdAt?: Prisma.DateTimeFilter<'JobPreferences'> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<'JobPreferences'> | Date | string;
+    autoPrepareEnabled?: Prisma.BoolFilter<'JobPreferences'> | boolean;
+    autoPrepareMinScore?: Prisma.IntFilter<'JobPreferences'> | number;
+    autoPrepareDailyLimit?: Prisma.IntFilter<'JobPreferences'> | number;
+    autoPrepareDocumentKinds?: Prisma.StringNullableListFilter<'JobPreferences'>;
     user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
   },
   'id' | 'userId'
@@ -379,6 +423,10 @@ export type JobPreferencesOrderByWithAggregationInput = {
   scheduleEnabled?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
+  autoPrepareEnabled?: Prisma.SortOrder;
+  autoPrepareMinScore?: Prisma.SortOrder;
+  autoPrepareDailyLimit?: Prisma.SortOrder;
+  autoPrepareDocumentKinds?: Prisma.SortOrder;
   _count?: Prisma.JobPreferencesCountOrderByAggregateInput;
   _avg?: Prisma.JobPreferencesAvgOrderByAggregateInput;
   _max?: Prisma.JobPreferencesMaxOrderByAggregateInput;
@@ -414,6 +462,10 @@ export type JobPreferencesScalarWhereWithAggregatesInput = {
   scheduleEnabled?: Prisma.BoolWithAggregatesFilter<'JobPreferences'> | boolean;
   createdAt?: Prisma.DateTimeWithAggregatesFilter<'JobPreferences'> | Date | string;
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<'JobPreferences'> | Date | string;
+  autoPrepareEnabled?: Prisma.BoolWithAggregatesFilter<'JobPreferences'> | boolean;
+  autoPrepareMinScore?: Prisma.IntWithAggregatesFilter<'JobPreferences'> | number;
+  autoPrepareDailyLimit?: Prisma.IntWithAggregatesFilter<'JobPreferences'> | number;
+  autoPrepareDocumentKinds?: Prisma.StringNullableListFilter<'JobPreferences'>;
 };
 
 export type JobPreferencesCreateInput = {
@@ -436,6 +488,10 @@ export type JobPreferencesCreateInput = {
   scheduleEnabled?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  autoPrepareEnabled?: boolean;
+  autoPrepareMinScore?: number;
+  autoPrepareDailyLimit?: number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesCreateautoPrepareDocumentKindsInput | string[];
   user: Prisma.UserCreateNestedOneWithoutPreferencesInput;
 };
 
@@ -460,6 +516,10 @@ export type JobPreferencesUncheckedCreateInput = {
   scheduleEnabled?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  autoPrepareEnabled?: boolean;
+  autoPrepareMinScore?: number;
+  autoPrepareDailyLimit?: number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesCreateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesUpdateInput = {
@@ -482,6 +542,10 @@ export type JobPreferencesUpdateInput = {
   scheduleEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  autoPrepareEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  autoPrepareMinScore?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDailyLimit?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesUpdateautoPrepareDocumentKindsInput | string[];
   user?: Prisma.UserUpdateOneRequiredWithoutPreferencesNestedInput;
 };
 
@@ -506,6 +570,10 @@ export type JobPreferencesUncheckedUpdateInput = {
   scheduleEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  autoPrepareEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  autoPrepareMinScore?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDailyLimit?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesUpdateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesCreateManyInput = {
@@ -529,6 +597,10 @@ export type JobPreferencesCreateManyInput = {
   scheduleEnabled?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  autoPrepareEnabled?: boolean;
+  autoPrepareMinScore?: number;
+  autoPrepareDailyLimit?: number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesCreateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesUpdateManyMutationInput = {
@@ -551,6 +623,10 @@ export type JobPreferencesUpdateManyMutationInput = {
   scheduleEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  autoPrepareEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  autoPrepareMinScore?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDailyLimit?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesUpdateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesUncheckedUpdateManyInput = {
@@ -574,6 +650,10 @@ export type JobPreferencesUncheckedUpdateManyInput = {
   scheduleEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  autoPrepareEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  autoPrepareMinScore?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDailyLimit?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesUpdateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesNullableScalarRelationFilter = {
@@ -610,11 +690,17 @@ export type JobPreferencesCountOrderByAggregateInput = {
   scheduleEnabled?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
+  autoPrepareEnabled?: Prisma.SortOrder;
+  autoPrepareMinScore?: Prisma.SortOrder;
+  autoPrepareDailyLimit?: Prisma.SortOrder;
+  autoPrepareDocumentKinds?: Prisma.SortOrder;
 };
 
 export type JobPreferencesAvgOrderByAggregateInput = {
   minSalary?: Prisma.SortOrder;
   scanHourLocal?: Prisma.SortOrder;
+  autoPrepareMinScore?: Prisma.SortOrder;
+  autoPrepareDailyLimit?: Prisma.SortOrder;
 };
 
 export type JobPreferencesMaxOrderByAggregateInput = {
@@ -628,6 +714,9 @@ export type JobPreferencesMaxOrderByAggregateInput = {
   scheduleEnabled?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
+  autoPrepareEnabled?: Prisma.SortOrder;
+  autoPrepareMinScore?: Prisma.SortOrder;
+  autoPrepareDailyLimit?: Prisma.SortOrder;
 };
 
 export type JobPreferencesMinOrderByAggregateInput = {
@@ -641,11 +730,16 @@ export type JobPreferencesMinOrderByAggregateInput = {
   scheduleEnabled?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
+  autoPrepareEnabled?: Prisma.SortOrder;
+  autoPrepareMinScore?: Prisma.SortOrder;
+  autoPrepareDailyLimit?: Prisma.SortOrder;
 };
 
 export type JobPreferencesSumOrderByAggregateInput = {
   minSalary?: Prisma.SortOrder;
   scanHourLocal?: Prisma.SortOrder;
+  autoPrepareMinScore?: Prisma.SortOrder;
+  autoPrepareDailyLimit?: Prisma.SortOrder;
 };
 
 export type JobPreferencesCreateNestedOneWithoutUserInput = {
@@ -744,6 +838,10 @@ export type JobPreferencesCreateenabledSourcesInput = {
   set: string[];
 };
 
+export type JobPreferencesCreateautoPrepareDocumentKindsInput = {
+  set: string[];
+};
+
 export type JobPreferencesUpdatetargetTitlesInput = {
   set?: string[];
   push?: string | string[];
@@ -802,6 +900,11 @@ export type JobPreferencesUpdateenabledSourcesInput = {
   push?: string | string[];
 };
 
+export type JobPreferencesUpdateautoPrepareDocumentKindsInput = {
+  set?: string[];
+  push?: string | string[];
+};
+
 export type JobPreferencesCreateWithoutUserInput = {
   id?: string;
   targetTitles?: Prisma.JobPreferencesCreatetargetTitlesInput | string[];
@@ -822,6 +925,10 @@ export type JobPreferencesCreateWithoutUserInput = {
   scheduleEnabled?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  autoPrepareEnabled?: boolean;
+  autoPrepareMinScore?: number;
+  autoPrepareDailyLimit?: number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesCreateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesUncheckedCreateWithoutUserInput = {
@@ -844,6 +951,10 @@ export type JobPreferencesUncheckedCreateWithoutUserInput = {
   scheduleEnabled?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  autoPrepareEnabled?: boolean;
+  autoPrepareMinScore?: number;
+  autoPrepareDailyLimit?: number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesCreateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesCreateOrConnectWithoutUserInput = {
@@ -894,6 +1005,10 @@ export type JobPreferencesUpdateWithoutUserInput = {
   scheduleEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  autoPrepareEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  autoPrepareMinScore?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDailyLimit?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesUpdateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesUncheckedUpdateWithoutUserInput = {
@@ -916,6 +1031,10 @@ export type JobPreferencesUncheckedUpdateWithoutUserInput = {
   scheduleEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  autoPrepareEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  autoPrepareMinScore?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDailyLimit?: Prisma.IntFieldUpdateOperationsInput | number;
+  autoPrepareDocumentKinds?: Prisma.JobPreferencesUpdateautoPrepareDocumentKindsInput | string[];
 };
 
 export type JobPreferencesSelect<
@@ -942,6 +1061,10 @@ export type JobPreferencesSelect<
     scheduleEnabled?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
+    autoPrepareEnabled?: boolean;
+    autoPrepareMinScore?: boolean;
+    autoPrepareDailyLimit?: boolean;
+    autoPrepareDocumentKinds?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
   },
   ExtArgs['result']['jobPreferences']
@@ -971,6 +1094,10 @@ export type JobPreferencesSelectCreateManyAndReturn<
     scheduleEnabled?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
+    autoPrepareEnabled?: boolean;
+    autoPrepareMinScore?: boolean;
+    autoPrepareDailyLimit?: boolean;
+    autoPrepareDocumentKinds?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
   },
   ExtArgs['result']['jobPreferences']
@@ -1000,6 +1127,10 @@ export type JobPreferencesSelectUpdateManyAndReturn<
     scheduleEnabled?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
+    autoPrepareEnabled?: boolean;
+    autoPrepareMinScore?: boolean;
+    autoPrepareDailyLimit?: boolean;
+    autoPrepareDocumentKinds?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
   },
   ExtArgs['result']['jobPreferences']
@@ -1026,6 +1157,10 @@ export type JobPreferencesSelectScalar = {
   scheduleEnabled?: boolean;
   createdAt?: boolean;
   updatedAt?: boolean;
+  autoPrepareEnabled?: boolean;
+  autoPrepareMinScore?: boolean;
+  autoPrepareDailyLimit?: boolean;
+  autoPrepareDocumentKinds?: boolean;
 };
 
 export type JobPreferencesOmit<
@@ -1050,7 +1185,11 @@ export type JobPreferencesOmit<
   | 'scanHourLocal'
   | 'scheduleEnabled'
   | 'createdAt'
-  | 'updatedAt',
+  | 'updatedAt'
+  | 'autoPrepareEnabled'
+  | 'autoPrepareMinScore'
+  | 'autoPrepareDailyLimit'
+  | 'autoPrepareDocumentKinds',
   ExtArgs['result']['jobPreferences']
 >;
 export type JobPreferencesInclude<
@@ -1098,6 +1237,24 @@ export type $JobPreferencesPayload<
       scheduleEnabled: boolean;
       createdAt: Date;
       updatedAt: Date;
+      /**
+       * Application preparation (not submission). When enabled, the system
+       * assembles application packages for matching jobs on its own; the user
+       * still reviews and sends each one. Off unless the user turns it on.
+       */
+      autoPrepareEnabled: boolean;
+      /**
+       * Minimum match score a job must reach to be prepared automatically.
+       */
+      autoPrepareMinScore: number;
+      /**
+       * Cap per rolling 24h so a first run cannot queue the entire feed.
+       */
+      autoPrepareDailyLimit: number;
+      /**
+       * Required kinds before a package counts as ready: resume, cover_letter, both.
+       */
+      autoPrepareDocumentKinds: string[];
     },
     ExtArgs['result']['jobPreferences']
   >;
@@ -1704,6 +1861,10 @@ export interface JobPreferencesFieldRefs {
   readonly scheduleEnabled: Prisma.FieldRef<'JobPreferences', 'Boolean'>;
   readonly createdAt: Prisma.FieldRef<'JobPreferences', 'DateTime'>;
   readonly updatedAt: Prisma.FieldRef<'JobPreferences', 'DateTime'>;
+  readonly autoPrepareEnabled: Prisma.FieldRef<'JobPreferences', 'Boolean'>;
+  readonly autoPrepareMinScore: Prisma.FieldRef<'JobPreferences', 'Int'>;
+  readonly autoPrepareDailyLimit: Prisma.FieldRef<'JobPreferences', 'Int'>;
+  readonly autoPrepareDocumentKinds: Prisma.FieldRef<'JobPreferences', 'String[]'>;
 }
 
 // Custom InputTypes

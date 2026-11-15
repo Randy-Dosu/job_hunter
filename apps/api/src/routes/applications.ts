@@ -5,6 +5,8 @@ import {
   updateApplicationSchema,
   addApplicationNoteSchema,
   idParamSchema,
+  prepareApplicationsSchema,
+  acceptPreparedApplicationsSchema,
 } from '@job-hunter/validation';
 import {
   APPLICATION_STATUSES,
@@ -16,12 +18,19 @@ import type { AppContext } from '../app.js';
 import { errors } from '../lib/errors.js';
 import { requireUser } from './guards.js';
 import { recordAudit } from '../lib/audit.js';
+import { PreparationService } from '../services/preparation-service.js';
 
 export async function registerApplicationRoutes(
   app: FastifyInstance,
   context: AppContext,
 ): Promise<void> {
   const { db } = context;
+  const preparation = new PreparationService({
+    db,
+    logger: context.logger,
+    ai: context.ai,
+    ...(context.now ? { now: context.now } : {}),
+  });
 
   async function loadApplication(userId: string, id: string) {
     const application = await db.application.findFirst({
@@ -75,6 +84,11 @@ export async function registerApplicationRoutes(
         status: application.status,
         statusLabel:
           APPLICATION_STATUS_LABELS[application.status as ApplicationStatus] ?? application.status,
+        // Provenance: the UI states plainly when we prepared it, never implying
+        // the user did work they did not.
+        origin: application.origin,
+        preparedAt: application.preparedAt?.toISOString() ?? null,
+        reviewChecklist: application.reviewChecklist,
         notes: application.notes,
         nextActionAt: application.nextActionAt?.toISOString() ?? null,
         appliedAt: application.appliedAt?.toISOString() ?? null,
@@ -154,6 +168,72 @@ export async function registerApplicationRoutes(
     });
   });
 
+  /**
+   * Run automatic preparation now.
+   *
+   * Honours the user's switch, score floor and daily cap. Returns a per-job
+   * outcome so the caller can show what happened instead of a bare count.
+   */
+  app.post('/applications/prepare', async (request, reply) => {
+    const user = requireUser(request);
+    const result = await preparation.prepareForUser({ userId: user.userId, trigger: 'manual' });
+
+    await recordAudit(db, context.logger, {
+      userId: user.userId,
+      action: 'application.prepared',
+      entityType: 'application',
+      entityId: 'batch',
+    });
+
+    return reply.status(200).send({
+      ...result,
+      // Repeated in the payload because this is the endpoint most likely to be
+      // mistaken for "apply for me".
+      note: 'Packages were prepared, not sent. Review and submit each one yourself.',
+    });
+  });
+
+  /** Prepare specific jobs by hand (for anything the automatic run skipped). */
+  app.post('/applications/prepare-jobs', async (request, reply) => {
+    const user = requireUser(request);
+    const input = prepareApplicationsSchema.parse(request.body);
+    const result = await preparation.prepareJobs({ userId: user.userId, jobIds: input.jobIds });
+    return reply.status(200).send({
+      ...result,
+      note: 'Packages were prepared, not sent. Review and submit each one yourself.',
+    });
+  });
+
+  /** The review queue: packages the system assembled and what still needs you. */
+  app.get('/applications/prepare-queue', async (request) => {
+    const user = requireUser(request);
+    const queue = await preparation.queue(user.userId);
+    const remaining = await preparation.remainingQuota(user.userId);
+    return { ...queue, remainingToday: remaining };
+  });
+
+  /** Accept several prepared packages at once. Never marks anything applied. */
+  app.post('/applications/accept-prepared', async (request, reply) => {
+    const user = requireUser(request);
+    const input = acceptPreparedApplicationsSchema.parse(request.body);
+    const result = await preparation.accept({
+      userId: user.userId,
+      applicationIds: input.applicationIds,
+    });
+
+    await recordAudit(db, context.logger, {
+      userId: user.userId,
+      action: 'application.accepted',
+      entityType: 'application',
+      entityId: 'batch',
+    });
+
+    return reply.status(200).send({
+      ...result,
+      note: 'Accepted packages still need you to send them.',
+    });
+  });
+
   app.get<{ Params: { id: string } }>('/applications/:id', async (request) => {
     const user = requireUser(request);
     const { id } = idParamSchema.parse(request.params);
@@ -175,6 +255,9 @@ export async function registerApplicationRoutes(
         status: application.status,
         statusLabel:
           APPLICATION_STATUS_LABELS[application.status as ApplicationStatus] ?? application.status,
+        origin: application.origin,
+        preparedAt: application.preparedAt?.toISOString() ?? null,
+        reviewChecklist: application.reviewChecklist,
         notes: application.notes,
         nextActionAt: application.nextActionAt?.toISOString() ?? null,
         appliedAt: application.appliedAt?.toISOString() ?? null,

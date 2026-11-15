@@ -38,7 +38,9 @@ damages your credibility. Job Hunter takes the opposite position:
 3. **Nothing is invented.** Generated documents may only restate facts you have
    explicitly verified, and the app refuses to export a document whose claims do
    not trace back to those facts.
-4. **You submit.** The product prepares; it never sends.
+4. **We prepare, you send.** The system can pick jobs from your preferences and
+   assemble each application for you — but the send button is yours. It exists
+   nowhere in the codebase, not as a hidden option.
 
 ## How it works
 
@@ -103,10 +105,37 @@ information"* and the card summary declines to describe gaps. The invariant is
 enforced in the engine (`packages/matching`) and persisted on `JobMatch.scoreable`,
 so the API and every client tell the same story from the same stored verdict.
 
+## Automatic application preparation
+
+The expensive part of applying is not clicking *send* — it is reading a posting,
+rewriting your CV for it, and writing a letter that does not lie. Job Hunter does
+that part for you, automatically:
+
+1. A scan scores new listings against your verified facts.
+2. Jobs at or above **your** minimum score are selected — never ones you
+   dismissed, never ones with an existing application record, never a score that
+   rests on no evidence (`scoreable: false` is excluded even if the number is
+   high).
+3. For each, it generates the CV and cover letter from verified facts only, then
+   attaches them and computes what still needs a human.
+4. The package waits in a **review queue**. You accept packages in bulk, which
+   runs the evidence check and approves the documents.
+
+What "accept" does *not* do is apply. Accepting means the documents are approved
+and the package is ready; sending it is a separate act that only you perform. The
+settings screen says so, the API response says so on every call, and the tests
+assert that no code path can set `applied`.
+
+Guard rails: off by default; a score floor you choose; a daily cap; documents are
+never auto-approved; and a run with no verified facts prepares nothing at all,
+because a document with nothing true to say is worse than no document.
+
 ## Safety properties
 
-- **No submission capability.** The application status `applied` is only ever set
-  because you said you applied. No column records a system submission.
+- **No submission capability.** This held before automatic preparation and still
+  holds after it. The application status `applied` is only ever set because you
+  said you applied. No column records a system submission, and the API surface is
+  tested for submit-shaped routes on every run.
 - **Browser assistance is optional and allowlisted.** It fills fields for your review,
   refuses to touch sensitive answers it has no stored value for, and is off unless a
   host is explicitly allowlisted and configured.
@@ -215,7 +244,7 @@ npx vitest run --project api  # HTTP, against a real PGlite instance
 npx vitest run --project web  # jsdom + Testing Library
 ```
 
-229 tests: 156 unit, 61 API, 12 web. The API suite is not mocked at the HTTP layer —
+244 tests: 156 unit, 75 API, 13 web. The API suite is not mocked at the HTTP layer —
 requests go through routing, auth, validation, services and Prisma against a real
 Postgres (PGlite, migrations applied, database thrown away afterwards), so the tests
 exercise the same code paths as production.
