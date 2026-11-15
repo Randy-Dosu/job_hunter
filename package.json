@@ -13,10 +13,12 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "npm run db:up && DATABASE_POOL_SIZE=1 npm run dev --workspace @job-hunter/api",
+    "dev": "npm run dev:db & npm run wait:db && npm run db:migrate && concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:db": "tsx scripts/dev-db.ts",
+    "dev:api": "DATABASE_POOL_SIZE=1 npm run dev --workspace @job-hunter/api",
     "dev:web": "npm run dev --workspace @job-hunter/web",
     "dev:worker": "npm run dev --workspace @job-hunter/worker",
+    "wait:db": "tsx scripts/wait-for-db.ts",
     "db:up": "tsx scripts/dev-db.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:reset": "tsx scripts/migrate.ts --reset",
