@@ -12,10 +12,6 @@ export const startBrowserSessionSchema = z.object({
   consent: z.literal(true, { error: 'You must confirm you want the assistant to start' }),
 });
 
-export const browserSessionIdParamSchema = z.object({
-  id: z.string().uuid(),
-});
-
 export const pauseBrowserSessionSchema = z.object({
   reason: z.enum([
     'user_review',

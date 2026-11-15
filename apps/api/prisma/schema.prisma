@@ -272,6 +272,9 @@ model JobMatch {
   band           String
   excluded       Boolean  @default(false)
   exclusionReason String?
+  /// False when no verified evidence existed in any judged dimension.
+  /// The score is then a placeholder and must not be shown as compatibility.
+  scoreable      Boolean  @default(true)
   scoringVersion String
   profileVersion String
   components     Json

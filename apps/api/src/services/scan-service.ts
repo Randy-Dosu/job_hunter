@@ -414,6 +414,7 @@ export class ScanService {
           jobId: job.id,
           score: result.score,
           band: result.band,
+          scoreable: result.scoreable,
           scoringVersion: result.scoringVersion,
           profileVersion: result.profileVersion,
           components: result.components as never,
@@ -424,6 +425,7 @@ export class ScanService {
         update: {
           score: result.score,
           band: result.band,
+          scoreable: result.scoreable,
           scoringVersion: result.scoringVersion,
           profileVersion: result.profileVersion,
           components: result.components as never,

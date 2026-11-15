@@ -41,6 +41,7 @@ export type JobMatchMinAggregateOutputType = {
   band: string | null;
   excluded: boolean | null;
   exclusionReason: string | null;
+  scoreable: boolean | null;
   scoringVersion: string | null;
   profileVersion: string | null;
   usedSemantic: boolean | null;
@@ -56,6 +57,7 @@ export type JobMatchMaxAggregateOutputType = {
   band: string | null;
   excluded: boolean | null;
   exclusionReason: string | null;
+  scoreable: boolean | null;
   scoringVersion: string | null;
   profileVersion: string | null;
   usedSemantic: boolean | null;
@@ -71,6 +73,7 @@ export type JobMatchCountAggregateOutputType = {
   band: number;
   excluded: number;
   exclusionReason: number;
+  scoreable: number;
   scoringVersion: number;
   profileVersion: number;
   components: number;
@@ -98,6 +101,7 @@ export type JobMatchMinAggregateInputType = {
   band?: true;
   excluded?: true;
   exclusionReason?: true;
+  scoreable?: true;
   scoringVersion?: true;
   profileVersion?: true;
   usedSemantic?: true;
@@ -113,6 +117,7 @@ export type JobMatchMaxAggregateInputType = {
   band?: true;
   excluded?: true;
   exclusionReason?: true;
+  scoreable?: true;
   scoringVersion?: true;
   profileVersion?: true;
   usedSemantic?: true;
@@ -128,6 +133,7 @@ export type JobMatchCountAggregateInputType = {
   band?: true;
   excluded?: true;
   exclusionReason?: true;
+  scoreable?: true;
   scoringVersion?: true;
   profileVersion?: true;
   components?: true;
@@ -235,6 +241,7 @@ export type JobMatchGroupByOutputType = {
   band: string;
   excluded: boolean;
   exclusionReason: string | null;
+  scoreable: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: runtime.JsonValue;
@@ -273,6 +280,7 @@ export type JobMatchWhereInput = {
   band?: Prisma.StringFilter<'JobMatch'> | string;
   excluded?: Prisma.BoolFilter<'JobMatch'> | boolean;
   exclusionReason?: Prisma.StringNullableFilter<'JobMatch'> | string | null;
+  scoreable?: Prisma.BoolFilter<'JobMatch'> | boolean;
   scoringVersion?: Prisma.StringFilter<'JobMatch'> | string;
   profileVersion?: Prisma.StringFilter<'JobMatch'> | string;
   components?: Prisma.JsonFilter<'JobMatch'>;
@@ -293,6 +301,7 @@ export type JobMatchOrderByWithRelationInput = {
   band?: Prisma.SortOrder;
   excluded?: Prisma.SortOrder;
   exclusionReason?: Prisma.SortOrderInput | Prisma.SortOrder;
+  scoreable?: Prisma.SortOrder;
   scoringVersion?: Prisma.SortOrder;
   profileVersion?: Prisma.SortOrder;
   components?: Prisma.SortOrder;
@@ -318,6 +327,7 @@ export type JobMatchWhereUniqueInput = Prisma.AtLeast<
     band?: Prisma.StringFilter<'JobMatch'> | string;
     excluded?: Prisma.BoolFilter<'JobMatch'> | boolean;
     exclusionReason?: Prisma.StringNullableFilter<'JobMatch'> | string | null;
+    scoreable?: Prisma.BoolFilter<'JobMatch'> | boolean;
     scoringVersion?: Prisma.StringFilter<'JobMatch'> | string;
     profileVersion?: Prisma.StringFilter<'JobMatch'> | string;
     components?: Prisma.JsonFilter<'JobMatch'>;
@@ -340,6 +350,7 @@ export type JobMatchOrderByWithAggregationInput = {
   band?: Prisma.SortOrder;
   excluded?: Prisma.SortOrder;
   exclusionReason?: Prisma.SortOrderInput | Prisma.SortOrder;
+  scoreable?: Prisma.SortOrder;
   scoringVersion?: Prisma.SortOrder;
   profileVersion?: Prisma.SortOrder;
   components?: Prisma.SortOrder;
@@ -368,6 +379,7 @@ export type JobMatchScalarWhereWithAggregatesInput = {
   band?: Prisma.StringWithAggregatesFilter<'JobMatch'> | string;
   excluded?: Prisma.BoolWithAggregatesFilter<'JobMatch'> | boolean;
   exclusionReason?: Prisma.StringNullableWithAggregatesFilter<'JobMatch'> | string | null;
+  scoreable?: Prisma.BoolWithAggregatesFilter<'JobMatch'> | boolean;
   scoringVersion?: Prisma.StringWithAggregatesFilter<'JobMatch'> | string;
   profileVersion?: Prisma.StringWithAggregatesFilter<'JobMatch'> | string;
   components?: Prisma.JsonWithAggregatesFilter<'JobMatch'>;
@@ -384,6 +396,7 @@ export type JobMatchCreateInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -404,6 +417,7 @@ export type JobMatchUncheckedCreateInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -420,6 +434,7 @@ export type JobMatchUpdateInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -440,6 +455,7 @@ export type JobMatchUncheckedUpdateInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -458,6 +474,7 @@ export type JobMatchCreateManyInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -474,6 +491,7 @@ export type JobMatchUpdateManyMutationInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -492,6 +510,7 @@ export type JobMatchUncheckedUpdateManyInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -525,6 +544,7 @@ export type JobMatchCountOrderByAggregateInput = {
   band?: Prisma.SortOrder;
   excluded?: Prisma.SortOrder;
   exclusionReason?: Prisma.SortOrder;
+  scoreable?: Prisma.SortOrder;
   scoringVersion?: Prisma.SortOrder;
   profileVersion?: Prisma.SortOrder;
   components?: Prisma.SortOrder;
@@ -547,6 +567,7 @@ export type JobMatchMaxOrderByAggregateInput = {
   band?: Prisma.SortOrder;
   excluded?: Prisma.SortOrder;
   exclusionReason?: Prisma.SortOrder;
+  scoreable?: Prisma.SortOrder;
   scoringVersion?: Prisma.SortOrder;
   profileVersion?: Prisma.SortOrder;
   usedSemantic?: Prisma.SortOrder;
@@ -562,6 +583,7 @@ export type JobMatchMinOrderByAggregateInput = {
   band?: Prisma.SortOrder;
   excluded?: Prisma.SortOrder;
   exclusionReason?: Prisma.SortOrder;
+  scoreable?: Prisma.SortOrder;
   scoringVersion?: Prisma.SortOrder;
   profileVersion?: Prisma.SortOrder;
   usedSemantic?: Prisma.SortOrder;
@@ -747,6 +769,7 @@ export type JobMatchCreateWithoutUserInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -765,6 +788,7 @@ export type JobMatchUncheckedCreateWithoutUserInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -827,6 +851,7 @@ export type JobMatchScalarWhereInput = {
   band?: Prisma.StringFilter<'JobMatch'> | string;
   excluded?: Prisma.BoolFilter<'JobMatch'> | boolean;
   exclusionReason?: Prisma.StringNullableFilter<'JobMatch'> | string | null;
+  scoreable?: Prisma.BoolFilter<'JobMatch'> | boolean;
   scoringVersion?: Prisma.StringFilter<'JobMatch'> | string;
   profileVersion?: Prisma.StringFilter<'JobMatch'> | string;
   components?: Prisma.JsonFilter<'JobMatch'>;
@@ -843,6 +868,7 @@ export type JobMatchCreateWithoutJobInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -861,6 +887,7 @@ export type JobMatchUncheckedCreateWithoutJobInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -919,6 +946,7 @@ export type JobMatchCreateManyUserInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -935,6 +963,7 @@ export type JobMatchUpdateWithoutUserInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -953,6 +982,7 @@ export type JobMatchUncheckedUpdateWithoutUserInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -970,6 +1000,7 @@ export type JobMatchUncheckedUpdateManyWithoutUserInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -987,6 +1018,7 @@ export type JobMatchCreateManyJobInput = {
   band: string;
   excluded?: boolean;
   exclusionReason?: string | null;
+  scoreable?: boolean;
   scoringVersion: string;
   profileVersion: string;
   components: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -1003,6 +1035,7 @@ export type JobMatchUpdateWithoutJobInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -1021,6 +1054,7 @@ export type JobMatchUncheckedUpdateWithoutJobInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -1038,6 +1072,7 @@ export type JobMatchUncheckedUpdateManyWithoutJobInput = {
   band?: Prisma.StringFieldUpdateOperationsInput | string;
   excluded?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   exclusionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  scoreable?: Prisma.BoolFieldUpdateOperationsInput | boolean;
   scoringVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   profileVersion?: Prisma.StringFieldUpdateOperationsInput | string;
   components?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
@@ -1059,6 +1094,7 @@ export type JobMatchSelect<
     band?: boolean;
     excluded?: boolean;
     exclusionReason?: boolean;
+    scoreable?: boolean;
     scoringVersion?: boolean;
     profileVersion?: boolean;
     components?: boolean;
@@ -1084,6 +1120,7 @@ export type JobMatchSelectCreateManyAndReturn<
     band?: boolean;
     excluded?: boolean;
     exclusionReason?: boolean;
+    scoreable?: boolean;
     scoringVersion?: boolean;
     profileVersion?: boolean;
     components?: boolean;
@@ -1109,6 +1146,7 @@ export type JobMatchSelectUpdateManyAndReturn<
     band?: boolean;
     excluded?: boolean;
     exclusionReason?: boolean;
+    scoreable?: boolean;
     scoringVersion?: boolean;
     profileVersion?: boolean;
     components?: boolean;
@@ -1131,6 +1169,7 @@ export type JobMatchSelectScalar = {
   band?: boolean;
   excluded?: boolean;
   exclusionReason?: boolean;
+  scoreable?: boolean;
   scoringVersion?: boolean;
   profileVersion?: boolean;
   components?: boolean;
@@ -1151,6 +1190,7 @@ export type JobMatchOmit<
   | 'band'
   | 'excluded'
   | 'exclusionReason'
+  | 'scoreable'
   | 'scoringVersion'
   | 'profileVersion'
   | 'components'
@@ -1197,6 +1237,11 @@ export type $JobMatchPayload<
       band: string;
       excluded: boolean;
       exclusionReason: string | null;
+      /**
+       * False when no verified evidence existed in any judged dimension.
+       * The score is then a placeholder and must not be shown as compatibility.
+       */
+      scoreable: boolean;
       scoringVersion: string;
       profileVersion: string;
       components: runtime.JsonValue;
@@ -1806,6 +1851,7 @@ export interface JobMatchFieldRefs {
   readonly band: Prisma.FieldRef<'JobMatch', 'String'>;
   readonly excluded: Prisma.FieldRef<'JobMatch', 'Boolean'>;
   readonly exclusionReason: Prisma.FieldRef<'JobMatch', 'String'>;
+  readonly scoreable: Prisma.FieldRef<'JobMatch', 'Boolean'>;
   readonly scoringVersion: Prisma.FieldRef<'JobMatch', 'String'>;
   readonly profileVersion: Prisma.FieldRef<'JobMatch', 'String'>;
   readonly components: Prisma.FieldRef<'JobMatch', 'Json'>;

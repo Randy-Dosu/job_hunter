@@ -96,6 +96,13 @@ Bands: **≥80 strong**, **≥65 good**, **≥45 fair**, below that weak. When a
 cannot be scored it is marked `unknown`, renormalised out of the total (so absence of
 data never lowers the score), and listed separately in the UI from real gaps.
 
+A match also carries `scoreable`. Dimensions are judged only where the candidate has
+verified evidence, so a brand-new profile scores nothing meaningful: rather than show
+a number that reads as a verdict, `scoreable: false` makes the UI say *"not enough
+information"* and the card summary declines to describe gaps. The invariant is
+enforced in the engine (`packages/matching`) and persisted on `JobMatch.scoreable`,
+so the API and every client tell the same story from the same stored verdict.
+
 ## Safety properties
 
 - **No submission capability.** The application status `applied` is only ever set
@@ -208,10 +215,18 @@ npx vitest run --project api  # HTTP, against a real PGlite instance
 npx vitest run --project web  # jsdom + Testing Library
 ```
 
-206 tests: 150 unit, 46 API, 10 web. The API suite is not mocked at the HTTP layer —
+229 tests: 156 unit, 61 API, 12 web. The API suite is not mocked at the HTTP layer —
 requests go through routing, auth, validation, services and Prisma against a real
 Postgres (PGlite, migrations applied, database thrown away afterwards), so the tests
 exercise the same code paths as production.
+
+`apps/api/test/regressions.test.ts` is worth knowing about: it pins five defects found by
+exercising the running API by hand — empty JSON bodies rejected before handlers ran,
+preview origins trusted in production, malformed ids reported as 404 instead of 422,
+`saved=true` resurrecting dismissed jobs, an empty profile scoring 48/"fair", a disabled
+feature answering with a validation error, and personal responses arriving without
+`cache-control`. Each one was silent, so each one gets a test that fails if the
+behaviour returns.
 
 The web tests are contract tests rather than snapshots: they pin that the screens read
 the real API shapes and that the safety rules survive in the UI — approval blocked by

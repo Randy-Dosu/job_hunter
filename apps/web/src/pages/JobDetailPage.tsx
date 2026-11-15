@@ -67,6 +67,8 @@ export default function JobDetailPage() {
 
   const { job, match, state, application, documents } = detail.data;
   const tone = scoreTone(match?.score);
+  // Never present a number as a verdict when nothing was verified to score.
+  const unscoreable = match?.scoreable === false;
   const salary = formatSalary({
     salaryMin: job.salary?.min,
     salaryMax: job.salary?.max,
@@ -351,9 +353,11 @@ export default function JobDetailPage() {
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Compatibility</p>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={cx('text-4xl font-semibold tracking-tight', tone.text)}>
-                {match ? match.score : '—'}
+                {unscoreable ? '—' : match ? match.score : '—'}
               </span>
-              {match ? (
+              {unscoreable ? (
+                <Badge tone="neutral">Not enough information</Badge>
+              ) : match ? (
                 <Badge
                   tone={
                     match.band === 'strong' ? 'success' : match.band === 'good' ? 'info' : 'neutral'
@@ -364,9 +368,11 @@ export default function JobDetailPage() {
               ) : null}
             </div>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              {match
-                ? `${match.evidence.length} supporting fact${match.evidence.length === 1 ? '' : 's'}, ${match.gaps.length} gap${match.gaps.length === 1 ? '' : 's'}`
-                : 'Not scored yet'}
+              {unscoreable
+                ? 'Add verified facts to your profile to get a real score'
+                : match
+                  ? `${match.evidence.length} supporting fact${match.evidence.length === 1 ? '' : 's'}, ${match.gaps.length} gap${match.gaps.length === 1 ? '' : 's'}`
+                  : 'Not scored yet'}
             </p>
 
             <div className="mt-4 space-y-2">

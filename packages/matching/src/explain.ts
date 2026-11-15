@@ -47,8 +47,16 @@ export function splitGaps(gaps: MatchGap[]): { confirmed: MatchGap[]; unknown: M
   };
 }
 
-/** Short one-line summary for job cards. */
+/**
+ * Short one-line summary for job cards.
+ *
+ * When nothing could be verified there is no comparison to summarise: listing
+ * "9 requirements not evidenced" implies the candidate failed them, when in fact
+ * we simply know nothing yet. Say that instead.
+ */
 export function summarizeMatch(result: MatchResult): string {
+  if (!result.scoreable) return 'Not enough verified information to judge fit yet';
+
   const strong = result.components
     .filter((component) => component.score !== null && component.score >= 0.75)
     .map((component) => DIMENSION_LABELS[component.dimension].split(' ')[0]?.toLowerCase())

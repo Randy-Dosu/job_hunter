@@ -79,7 +79,16 @@ async function migrate(connectionString: string): Promise<void> {
   }
 }
 
-export function createTestEnv(overrides: Partial<Env> = {}): Env {
+/**
+ * Overrides are the raw strings a deployment would set, because they are fed
+ * through the real `loadEnv` parser (`FEATURE_BROWSER_ASSISTANT: 'true'`), not
+ * pre-parsed values.
+ */
+export type EnvOverrides = {
+  [K in keyof Env]?: string | number | boolean;
+};
+
+export function createTestEnv(overrides: EnvOverrides = {}): Env {
   return {
     ...loadEnv({
       NODE_ENV: 'test',
@@ -99,7 +108,7 @@ export function createTestEnv(overrides: Partial<Env> = {}): Env {
 }
 
 export interface HarnessOptions {
-  env?: Partial<Env>;
+  env?: EnvOverrides;
   /** Replace the AI gateway (defaults to a deterministic mock). */
   ai?: AIGateway;
   /** Fixed clock for deterministic assertions. */

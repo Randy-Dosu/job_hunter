@@ -21,8 +21,31 @@ const connectionString =
 
 const client = new pg.Client({ connectionString });
 
+/**
+ * PGlite's socket server serves one connection at a time and can drop a
+ * connection that arrives while it is still switching between clients. That is
+ * a transient transport condition, not a migration failure, so connecting is
+ * retried briefly before giving up.
+ */
+async function connectWithRetry(attempts = 5, delayMs = 400): Promise<void> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await client.connect();
+      return;
+    } catch (error) {
+      if (attempt >= attempts) throw error;
+      console.warn(
+        `[migrate] connect attempt ${attempt} failed (${
+          error instanceof Error ? error.message : String(error)
+        }), retrying…`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+    }
+  }
+}
+
 async function main(): Promise<void> {
-  await client.connect();
+  await connectWithRetry();
 
   if (reset) {
     if (process.env.NODE_ENV === 'production') {

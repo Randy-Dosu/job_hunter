@@ -32,10 +32,6 @@ export const exportDocumentSchema = z.object({
   format: z.enum(EXPORT_FORMATS),
 });
 
-export const documentIdParamSchema = z.object({
-  id: z.string().uuid(),
-});
-
 export const documentListQuerySchema = z.object({
   jobId: z.string().uuid().optional(),
   kind: z.enum(['resume', 'cover_letter']).optional(),

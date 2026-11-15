@@ -259,6 +259,19 @@ export function scoreJob(input: ScoringInput): ScoringOutput {
   const rawScore = known.reduce((sum, component) => sum + component.points, 0);
   const score = Math.round(clamp(rawScore, 0, 100));
 
+  // A score is only meaningful when at least one dimension was judged on
+  // candidate *evidence*. Role/location/preference match is about the search
+  // configuration, so an account with nothing verified could otherwise collect
+  // a respectable number that says nothing about the person.
+  const evidenceDimensions = new Set(['skills', 'experience', 'education']);
+  const scoreable = known.some(
+    (component) =>
+      evidenceDimensions.has(component.dimension) &&
+      // Skills scores 0 when nothing matched, so require actual evidence rather
+      // than mere scorability there.
+      (component.dimension === 'skills' ? evidence.length > 0 : true),
+  );
+
   const eligibilityFindings = gaps.length;
 
   return {
@@ -267,6 +280,7 @@ export function scoreJob(input: ScoringInput): ScoringOutput {
     scoringVersion: SCORING_VERSION,
     score,
     band: toBand(score),
+    scoreable,
     components,
     evidence: dedupeEvidence(evidence),
     gaps: dedupeGaps(gaps),
@@ -276,6 +290,7 @@ export function scoreJob(input: ScoringInput): ScoringOutput {
     requirementProfile,
     componentDetails: components,
     ...(eligibilityFindings === 0 ? { note: 'No gaps found against verified facts.' } : {}),
+    ...(scoreable ? {} : { note: 'Not enough verified profile information to judge fit yet.' }),
   } as ScoringOutput;
 }
 
@@ -596,16 +611,35 @@ function scoreEducation(input: {
   const educationFacts = verifiedFacts.filter((fact) => fact.kind === 'education');
   const unknowns: string[] = [];
 
+  const hasAnyEducation = hasEducation || educationFacts.length > 0;
+
+  // A "no requirement stated" posting used to award 0.6 when the candidate had
+  // no education at all. That manufactured a score from the *absence* of data:
+  // a brand-new profile with zero verified facts still collected 48/100 "fair"
+  // on the strength of role/location matches and this bonus. Absence of a
+  // requirement must never be worth more than absence of evidence, so an
+  // unknown candidate now scores unknown in both branches.
   if (!requirementProfile.educationHint && requirementProfile.certifications.length === 0) {
+    if (!hasAnyEducation) {
+      return {
+        score: null,
+        rationale:
+          'The posting names no education requirement, and your profile has no verified education to weigh.',
+        unknowns: [
+          'No education requirement stated in the posting.',
+          'No verified education entries found in your profile.',
+        ],
+      };
+    }
     return {
-      score: hasEducation || educationFacts.length > 0 ? 0.75 : 0.6,
+      score: 0.75,
       rationale:
         'The posting names no specific education or certification requirement, so only presence of education is considered.',
       unknowns: ['No education requirement stated in the posting.'],
     };
   }
 
-  if (!hasEducation && educationFacts.length === 0) {
+  if (!hasAnyEducation) {
     unknowns.push('No verified education entries found in your profile.');
     return {
       score: null,

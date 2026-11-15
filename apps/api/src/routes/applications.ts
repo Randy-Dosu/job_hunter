@@ -4,6 +4,7 @@ import {
   createApplicationSchema,
   updateApplicationSchema,
   addApplicationNoteSchema,
+  idParamSchema,
 } from '@job-hunter/validation';
 import {
   APPLICATION_STATUSES,
@@ -155,7 +156,8 @@ export async function registerApplicationRoutes(
 
   app.get<{ Params: { id: string } }>('/applications/:id', async (request) => {
     const user = requireUser(request);
-    const application = await loadApplication(user.userId, request.params.id);
+    const { id } = idParamSchema.parse(request.params);
+    const application = await loadApplication(user.userId, id);
 
     const documentIds = [application.resumeDocumentId, application.coverLetterDocumentId].filter(
       (value): value is string => typeof value === 'string',
@@ -203,8 +205,9 @@ export async function registerApplicationRoutes(
 
   app.patch<{ Params: { id: string } }>('/applications/:id', async (request) => {
     const user = requireUser(request);
+    const { id } = idParamSchema.parse(request.params);
     // Ownership is checked before the body is validated.
-    const application = await loadApplication(user.userId, request.params.id);
+    const application = await loadApplication(user.userId, id);
     const input = updateApplicationSchema.parse(request.body ?? {});
 
     if (input.status && input.status !== application.status) {
@@ -263,8 +266,9 @@ export async function registerApplicationRoutes(
 
   app.post<{ Params: { id: string } }>('/applications/:id/notes', async (request, reply) => {
     const user = requireUser(request);
+    const { id } = idParamSchema.parse(request.params);
     // Ownership is checked before the body is validated.
-    const application = await loadApplication(user.userId, request.params.id);
+    const application = await loadApplication(user.userId, id);
     const input = addApplicationNoteSchema.parse(request.body ?? {});
 
     const event = await db.applicationEvent.create({
@@ -282,7 +286,8 @@ export async function registerApplicationRoutes(
 
   app.delete<{ Params: { id: string } }>('/applications/:id', async (request, reply) => {
     const user = requireUser(request);
-    const application = await loadApplication(user.userId, request.params.id);
+    const { id } = idParamSchema.parse(request.params);
+    const application = await loadApplication(user.userId, id);
     await db.application.update({
       where: { id: application.id },
       data: { archivedAt: new Date() },

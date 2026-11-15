@@ -87,7 +87,9 @@ async function createVerifiedFact(userId: string, overrides: Record<string, unkn
 }
 
 beforeAll(async () => {
-  harness = await startHarness();
+  // Browser assistance is gated per deployment. Enable it here so the ownership
+  // assertions exercise the authorization path rather than the feature switch.
+  harness = await startHarness({ env: { FEATURE_BROWSER_ASSISTANT: 'true' } });
   app = harness.app;
   const a = await signup('alice');
   const b = await signup('bob');

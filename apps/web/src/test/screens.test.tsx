@@ -304,6 +304,48 @@ describe('job feed', () => {
     expect(screen.getByText(/1 listing/)).toBeDefined();
   });
 
+  it('shows "not enough information" instead of a number when nothing is verified', async () => {
+    stubFetch({
+      '/jobs': () =>
+        json({
+          items: [
+            {
+              id: '55555555-5555-4555-8555-555555555555',
+              title: 'Platform Engineer',
+              company: 'Umbrella',
+              companyLogoUrl: null,
+              url: 'https://example.com/jobs/2',
+              source: 'remotive',
+              sources: ['remotive'],
+              location: { raw: 'Remote', countryCode: null, remote: true, workplace: 'remote' },
+              employmentType: 'full_time',
+              seniority: 'senior',
+              salary: null,
+              tags: [],
+              freshness: 'new',
+              postedAt: null,
+              firstSeenAt: new Date().toISOString(),
+              match: { score: 33, band: 'weak', scoreable: false },
+              saved: false,
+              dismissed: false,
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 20,
+        }),
+      '/sources': () => json({ sources: [], automatedCount: 0, manualHandoff: [] }),
+    });
+
+    renderAt('/jobs', <JobsPage />);
+
+    expect(await screen.findByText('Platform Engineer')).toBeDefined();
+    // The meaningless 33 must not be presented as a judgement of fit.
+    expect(screen.getByText('Not enough information')).toBeDefined();
+    expect(screen.queryByText('33')).toBeNull();
+    expect(screen.queryByText(/weak fit/i)).toBeNull();
+  });
+
   it('shows an empty state instead of a blank page', async () => {
     stubFetch({
       '/jobs': () => json({ items: [], total: 0, page: 1, pageSize: 20 }),
@@ -330,6 +372,18 @@ describe('job detail', () => {
     expect(screen.queryByRole('button', { name: /submit/i })).toBeNull();
     expect(screen.getByRole('button', { name: 'Start application' })).toBeDefined();
     expect(screen.getByText(/never submits an application/)).toBeDefined();
+  });
+
+  it('does not headline a score for an unscoreable match', async () => {
+    const unscoreable = {
+      ...JOB_DETAIL,
+      match: { ...JOB_DETAIL.match, score: 33, band: 'weak' as const, scoreable: false },
+    };
+    stubFetch({ '/jobs/44444444-4444-4444-4444-444444444444': () => json(unscoreable) });
+    renderAt('/jobs/:jobId', <JobDetailPage />, `/jobs/${JOB_DETAIL.job.id}`);
+
+    expect(await screen.findByText('Not enough information')).toBeDefined();
+    expect(screen.getByText(/Add verified facts to your profile/)).toBeDefined();
   });
 
   it('records feedback with an allowed relevance value', async () => {

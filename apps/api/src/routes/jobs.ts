@@ -1,5 +1,10 @@
 import type { FastifyInstance } from 'fastify';
-import { jobListQuerySchema, jobStateSchema, jobFeedbackSchema } from '@job-hunter/validation';
+import {
+  jobIdParamSchema,
+  jobListQuerySchema,
+  jobStateSchema,
+  jobFeedbackSchema,
+} from '@job-hunter/validation';
 import type { MatchGap, MatchEvidence, ScoreComponent } from '@job-hunter/shared-types';
 import type { AppContext } from '../app.js';
 import { errors } from '../lib/errors.js';
@@ -35,12 +40,29 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
       states.filter((state) => state.dismissed).map((state) => state.jobId),
     );
     const savedIds = new Set(states.filter((state) => state.saved).map((state) => state.jobId));
-    if (query.dismissed !== true) where.id = { notIn: [...dismissedIds] };
-    if (query.saved === true) where.id = { in: [...savedIds] };
+    // These two conditions both target `where.id`, so they must be combined
+    // rather than assigned: assigning `saved` last replaced the dismissed
+    // exclusion entirely and a dismissed job reappeared under "Saved only".
+    if (query.saved === true) {
+      where.id = {
+        in: [...savedIds].filter((id) => query.dismissed === true || !dismissedIds.has(id)),
+      };
+    } else if (query.dismissed === true) {
+      where.id = { in: [...dismissedIds] };
+    } else {
+      where.id = { notIn: [...dismissedIds] };
+    }
 
     const matches = await db.jobMatch.findMany({
       where: { userId: user.userId },
-      select: { jobId: true, score: true, band: true, components: true, gaps: true },
+      select: {
+        jobId: true,
+        score: true,
+        band: true,
+        scoreable: true,
+        components: true,
+        gaps: true,
+      },
     });
     const matchByJob = new Map(matches.map((match) => [match.jobId, match]));
 
@@ -100,7 +122,11 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
           ? {
               score: match.score,
               band: match.band,
+              scoreable: match.scoreable,
+              // `scoreable` must be part of the input: the summary uses it to
+              // avoid describing gaps for a profile with no evidence at all.
               summary: summarizeMatch({
+                scoreable: match.scoreable,
                 components: match.components as unknown as ScoreComponent[],
                 gaps: match.gaps as unknown as MatchGap[],
               } as never),
@@ -120,8 +146,9 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
 
   app.get<{ Params: { jobId: string } }>('/jobs/:jobId', async (request) => {
     const user = requireUser(request);
+    const { jobId } = jobIdParamSchema.parse(request.params);
     const job = await db.job.findUnique({
-      where: { id: request.params.jobId },
+      where: { id: jobId },
       include: { records: true },
     });
     if (!job) throw errors.notFound('Job not found');
@@ -207,7 +234,8 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
   /** Recompute the compatibility match on demand (uses verified facts only). */
   app.post<{ Params: { jobId: string } }>('/jobs/:jobId/match', async (request) => {
     const user = requireUser(request);
-    const job = await db.job.findUnique({ where: { id: request.params.jobId } });
+    const { jobId } = jobIdParamSchema.parse(request.params);
+    const job = await db.job.findUnique({ where: { id: jobId } });
     if (!job) throw errors.notFound('Job not found');
 
     const [profile, facts, prefsRow] = await Promise.all([
@@ -271,6 +299,7 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
         jobId: job.id,
         score: result.score,
         band: result.band,
+        scoreable: result.scoreable,
         scoringVersion: result.scoringVersion,
         profileVersion: result.profileVersion,
         components: result.components as never,
@@ -281,6 +310,7 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
       update: {
         score: result.score,
         band: result.band,
+        scoreable: result.scoreable,
         scoringVersion: result.scoringVersion,
         profileVersion: result.profileVersion,
         components: result.components as never,
@@ -296,9 +326,10 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
   app.put<{ Params: { jobId: string } }>('/jobs/:jobId/state', async (request, reply) => {
     const user = requireUser(request);
     const input = jobStateSchema.parse(request.body);
+    const { jobId } = jobIdParamSchema.parse(request.params);
 
     const job = await db.job.findUnique({
-      where: { id: request.params.jobId },
+      where: { id: jobId },
       select: { id: true },
     });
     if (!job) throw errors.notFound('Job not found');
@@ -335,8 +366,9 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
   app.post<{ Params: { jobId: string } }>('/jobs/:jobId/feedback', async (request, reply) => {
     const user = requireUser(request);
     const input = jobFeedbackSchema.parse(request.body);
+    const { jobId } = jobIdParamSchema.parse(request.params);
     const job = await db.job.findUnique({
-      where: { id: request.params.jobId },
+      where: { id: jobId },
       select: { id: true },
     });
     if (!job) throw errors.notFound('Job not found');
@@ -352,6 +384,7 @@ export async function registerJobRoutes(app: FastifyInstance, context: AppContex
 function buildMatchResponse(match: {
   score: number;
   band: string;
+  scoreable: boolean;
   components: unknown;
   evidence: unknown;
   gaps: unknown;
@@ -372,6 +405,7 @@ function buildMatchResponse(match: {
     band: match.band,
     scoringVersion: match.scoringVersion,
     profileVersion: match.profileVersion,
+    scoreable: match.scoreable,
     usedSemantic: match.usedSemantic,
     computedAt: match.computedAt.toISOString(),
     excluded: match.excluded,

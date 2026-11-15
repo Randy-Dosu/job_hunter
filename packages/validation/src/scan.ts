@@ -44,10 +44,6 @@ export const jobListQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-export const jobIdParamSchema = z.object({
-  jobId: z.string().uuid(),
-});
-
 export const jobFeedbackSchema = z.object({
   relevance: z.enum(['relevant', 'not_relevant']),
   reason: trimmedString(300).optional(),

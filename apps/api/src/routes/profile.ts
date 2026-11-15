@@ -5,6 +5,7 @@ import {
   updateProfileSchema,
   verifyFactsSchema,
   answerBankSchema,
+  idParamSchema,
 } from '@job-hunter/validation';
 import { FACT_KINDS, type FactKind, type ProfileFact } from '@job-hunter/shared-types';
 import type { AppContext } from '../app.js';
@@ -129,9 +130,10 @@ export async function registerProfileRoutes(
   app.patch<{ Params: { id: string } }>('/profile/facts/:id', async (request) => {
     const user = requireUser(request);
     const input = updateFactSchema.parse(request.body);
+    const { id } = idParamSchema.parse(request.params);
 
     const existing = await db.profileFact.findFirst({
-      where: { id: request.params.id, userId: user.userId },
+      where: { id: id, userId: user.userId },
     });
     if (!existing) throw errors.notFound('That fact was not found');
 
@@ -156,8 +158,9 @@ export async function registerProfileRoutes(
 
   app.delete<{ Params: { id: string } }>('/profile/facts/:id', async (request, reply) => {
     const user = requireUser(request);
+    const { id } = idParamSchema.parse(request.params);
     const deleted = await db.profileFact.deleteMany({
-      where: { id: request.params.id, userId: user.userId },
+      where: { id: id, userId: user.userId },
     });
     if (deleted.count === 0) throw errors.notFound('That fact was not found');
     return reply.status(204).send();

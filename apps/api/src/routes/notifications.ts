@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { idParamSchema } from '@job-hunter/validation';
 import type { AppContext } from '../app.js';
 import { errors } from '../lib/errors.js';
 import { requireUser } from './guards.js';
@@ -36,8 +37,9 @@ export async function registerNotificationRoutes(
 
   app.post<{ Params: { id: string } }>('/notifications/:id/read', async (request) => {
     const user = requireUser(request);
+    const { id } = idParamSchema.parse(request.params);
     const updated = await db.notification.updateMany({
-      where: { id: request.params.id, userId: user.userId },
+      where: { id: id, userId: user.userId },
       data: { readAt: new Date() },
     });
     if (updated.count === 0) throw errors.notFound('Notification not found');

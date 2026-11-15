@@ -5,6 +5,7 @@ import {
   estimateYears,
   normalizeWeights,
   scoreJob,
+  summarizeMatch,
   toBand,
 } from '../src/index.js';
 import {
@@ -177,5 +178,80 @@ describe('weights and helpers', () => {
 
   it('returns undefined years when no dates are known', () => {
     expect(estimateYears([], makeProfile({ experience: [] }))).toBeUndefined();
+  });
+});
+
+/**
+ * Regressions from the live-API sweep.
+ *
+ * A brand-new account with no verified facts used to score 48/"fair" — the
+ * education dimension awarded 0.6 for a posting that did not ask for a degree,
+ * and a number on screen reads as a judgement even when nothing is known.
+ */
+describe('scoreJob — no evidence must never look like a judgement', () => {
+  const emptyProfile = () =>
+    makeProfile({ skills: [], experience: [], education: [], certifications: [], summary: '' });
+
+  it('flags an empty profile as not scoreable instead of bands it', () => {
+    const result = scoreJob({
+      job: STRONG_JOB,
+      profile: emptyProfile(),
+      verifiedFacts: [],
+      preferences: makePreferences(),
+    });
+    expect(result.scoreable).toBe(false);
+    expect(result.score).toBeGreaterThanOrEqual(0);
+    expect(result.score).toBeLessThan(45);
+    expect(result.band).toBe('weak');
+    // The UI relies on this note to explain the missing number.
+    expect((result as { note?: string }).note).toMatch(/not enough verified profile information/i);
+  });
+
+  it('never awards education points when the candidate listed no education', () => {
+    const result = scoreJob({
+      job: STRONG_JOB,
+      profile: emptyProfile(),
+      verifiedFacts: [],
+      preferences: makePreferences(),
+    });
+    const education = result.components.find((row) => row.dimension === 'education');
+    expect(education).toBeDefined();
+    // Either genuinely absent (null, renormalised out) or a real comparison —
+    // never a made-up 0.6 "near miss" for a candidate with no education at all.
+    expect(education?.score === null || (education?.score ?? 1) < 0.6).toBe(true);
+  });
+
+  it('marks a match scoreable as soon as one verified dimension has evidence', () => {
+    const result = scoreJob({
+      job: STRONG_JOB,
+      profile: emptyProfile(),
+      verifiedFacts: makeFacts().filter((item) => item.kind === 'skill'),
+      preferences: makePreferences(),
+    });
+    expect(result.scoreable).toBe(true);
+    expect(result.score).toBeGreaterThan(0);
+  });
+
+  it('keeps a fully evidenced match scoreable', () => {
+    expect(scoreJob(baseInput()).scoreable).toBe(true);
+  });
+});
+
+describe('summarizeMatch — no evidence, no verdict', () => {
+  it('does not imply the candidate fell short when nothing is known', () => {
+    const result = scoreJob({
+      job: STRONG_JOB,
+      profile: makeProfile({ skills: [], experience: [], education: [], certifications: [] }),
+      verifiedFacts: [],
+      preferences: makePreferences(),
+    });
+    expect(summarizeMatch(result)).toMatch(/not enough verified information/i);
+    expect(summarizeMatch(result)).not.toMatch(/not evidenced/);
+  });
+
+  it('still summarises strong dimensions when evidence exists', () => {
+    const summary = summarizeMatch(scoreJob(baseInput()));
+    expect(summary).not.toMatch(/not enough verified information/i);
+    expect(summary.length).toBeGreaterThan(0);
   });
 });

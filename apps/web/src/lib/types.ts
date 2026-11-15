@@ -181,7 +181,12 @@ export interface MatchBreakdownRow {
 export interface MatchSummary {
   score: number;
   band: MatchBand;
-  scoringVersion: string;
+  /**
+   * False when the profile had no verified evidence to judge. The number is then
+   * a placeholder and must be shown as "not enough information".
+   */
+  scoreable?: boolean;
+  scoringVersion?: string;
 }
 
 export interface JobListItem {

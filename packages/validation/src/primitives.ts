@@ -75,3 +75,14 @@ export const safeText = (max: number) =>
     .string()
     .transform((value) => sanitizeText(value))
     .pipe(z.string().max(max));
+
+/**
+ * Path-parameter schemas.
+ *
+ * Without these a malformed id reaches the database and surfaces as "not
+ * found", which reads as a missing resource instead of a bad request. Parsing
+ * the id up front turns it into a 422 with a clear message. Route handlers
+ * still check ownership, so an unowned-but-valid id remains a 404.
+ */
+export const idParamSchema = z.object({ id: uuidSchema });
+export const jobIdParamSchema = z.object({ jobId: uuidSchema });

@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { idParamSchema } from '@job-hunter/validation';
 import { MAX_RESUME_BYTES, validateResumeFile } from '@job-hunter/resume-parser';
 import { extractResumeText } from '@job-hunter/resume-parser';
 import { parseResumeText } from '@job-hunter/resume-parser';
@@ -123,8 +124,9 @@ export async function registerResumeRoutes(
    */
   app.post<{ Params: { id: string } }>('/resumes/:id/parse', async (request) => {
     const user = requireUser(request);
+    const { id } = idParamSchema.parse(request.params);
     const resume = await db.resume.findFirst({
-      where: { id: request.params.id, userId: user.userId, deletedAt: null },
+      where: { id: id, userId: user.userId, deletedAt: null },
     });
     if (!resume) throw errors.notFound('Resume not found');
 
@@ -220,8 +222,9 @@ export async function registerResumeRoutes(
 
   app.delete<{ Params: { id: string } }>('/resumes/:id', async (request, reply) => {
     const user = requireUser(request);
+    const { id } = idParamSchema.parse(request.params);
     const resume = await db.resume.findFirst({
-      where: { id: request.params.id, userId: user.userId, deletedAt: null },
+      where: { id: id, userId: user.userId, deletedAt: null },
     });
     if (!resume) throw errors.notFound('Resume not found');
 
@@ -249,8 +252,9 @@ export async function registerResumeRoutes(
 
   app.post<{ Params: { id: string } }>('/resumes/:id/primary', async (request) => {
     const user = requireUser(request);
+    const { id } = idParamSchema.parse(request.params);
     const resume = await db.resume.findFirst({
-      where: { id: request.params.id, userId: user.userId, deletedAt: null },
+      where: { id: id, userId: user.userId, deletedAt: null },
     });
     if (!resume) throw errors.notFound('Resume not found');
 

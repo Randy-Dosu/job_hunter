@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { startScanSchema } from '@job-hunter/validation';
+import { idParamSchema, startScanSchema } from '@job-hunter/validation';
 import { LIMITS } from '@job-hunter/config';
 import type { AppContext } from '../app.js';
 import { errors } from '../lib/errors.js';
@@ -96,8 +96,9 @@ export async function registerScanRoutes(app: FastifyInstance, context: AppConte
 
   app.get<{ Params: { id: string } }>('/scans/:id', async (request) => {
     const user = requireUser(request);
+    const { id } = idParamSchema.parse(request.params);
     const run = await db.scanRun.findFirst({
-      where: { id: request.params.id, userId: user.userId },
+      where: { id: id, userId: user.userId },
       include: { sourceRuns: true },
     });
     if (!run) throw errors.notFound('Scan not found');

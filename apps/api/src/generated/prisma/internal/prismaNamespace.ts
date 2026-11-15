@@ -2508,6 +2508,7 @@ export const JobMatchScalarFieldEnum = {
   band: 'band',
   excluded: 'excluded',
   exclusionReason: 'exclusionReason',
+  scoreable: 'scoreable',
   scoringVersion: 'scoringVersion',
   profileVersion: 'profileVersion',
   components: 'components',

@@ -4,6 +4,8 @@ import {
   editDocumentSchema,
   exportDocumentSchema,
   generateDocumentSchema,
+  idParamSchema,
+  jobIdParamSchema,
 } from '@job-hunter/validation';
 import type { GeneratedDocumentContent } from '@job-hunter/shared-types';
 import type { AppContext } from '../app.js';
@@ -49,6 +51,7 @@ export async function registerDocumentRoutes(
   app.post<{ Params: { jobId: string } }>('/jobs/:jobId/documents', async (request, reply) => {
     const user = requireUser(request);
     const input = generateDocumentSchema.parse(request.body ?? {});
+    const { jobId } = jobIdParamSchema.parse(request.params);
 
     const limit = context.rateLimiters.ai.check(`ai:${user.userId}`);
     if (!limit.allowed) {
@@ -59,7 +62,7 @@ export async function registerDocumentRoutes(
 
     const result = await service.generateForJob({
       userId: user.userId,
-      jobId: request.params.jobId,
+      jobId,
       kind: input.kind,
       tone: input.tone,
     });
@@ -98,7 +101,8 @@ export async function registerDocumentRoutes(
 
   app.get<{ Params: { id: string } }>('/documents/:id', async (request) => {
     const user = requireUser(request);
-    const document = await loadDocument(user.userId, request.params.id);
+    const { id } = idParamSchema.parse(request.params);
+    const document = await loadDocument(user.userId, id);
     const job = await db.job.findUnique({
       where: { id: document.jobId },
       select: { title: true, company: true, url: true },
@@ -117,7 +121,8 @@ export async function registerDocumentRoutes(
   app.patch<{ Params: { id: string } }>('/documents/:id', async (request) => {
     const user = requireUser(request);
     // Ownership is checked before the body is validated.
-    const document = await loadDocument(user.userId, request.params.id);
+    const { id } = idParamSchema.parse(request.params);
+    const document = await loadDocument(user.userId, id);
     const input = editDocumentSchema.parse(request.body ?? {});
 
     const current = document.content as unknown as GeneratedDocumentContent;
@@ -170,11 +175,12 @@ export async function registerDocumentRoutes(
   app.post<{ Params: { id: string } }>('/documents/:id/approve', async (request) => {
     const user = requireUser(request);
     // Load first so a non-owner always sees 404, regardless of body validity.
-    await loadDocument(user.userId, request.params.id);
+    const { id } = idParamSchema.parse(request.params);
+    await loadDocument(user.userId, id);
     const input = approveDocumentSchema.parse(request.body ?? {});
     const result = await service.approve({
       userId: user.userId,
-      documentId: request.params.id,
+      documentId: id,
       acknowledgeWarnings: input.acknowledgeWarnings,
     });
     await recordAudit(db, context.logger, {
@@ -190,7 +196,8 @@ export async function registerDocumentRoutes(
   app.get<{ Params: { id: string } }>('/documents/:id/export', async (request, reply) => {
     const user = requireUser(request);
     const format = exportDocumentSchema.parse(request.query).format;
-    const document = await loadDocument(user.userId, request.params.id);
+    const { id } = idParamSchema.parse(request.params);
+    const document = await loadDocument(user.userId, id);
 
     if (format !== 'json' && document.status !== 'approved') {
       throw errors.conflict('Approve this document before exporting it.');
@@ -216,7 +223,8 @@ export async function registerDocumentRoutes(
 
   app.delete<{ Params: { id: string } }>('/documents/:id', async (request, reply) => {
     const user = requireUser(request);
-    const document = await loadDocument(user.userId, request.params.id);
+    const { id } = idParamSchema.parse(request.params);
+    const document = await loadDocument(user.userId, id);
     await db.generatedDocument.delete({ where: { id: document.id } });
     return reply.status(204).send();
   });

@@ -78,12 +78,18 @@ export async function buildApp({
       const allowed = context.env.WEB_ORIGIN.split(',')
         .map((value) => value.trim())
         .filter(Boolean);
-      // In development, allow the live preview host pattern used by the sandbox.
-      const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin);
-      const isPreview = /^https:\/\/[a-z0-9-]+\.e2b\.app$/.test(origin);
-      const isArena = /^https:\/\/[a-z0-9-]+\.arena\.(ai|dev)$/.test(origin);
-      if (allowed.includes(origin) || isLocalhost || isPreview || isArena) {
-        return callback(null, true);
+      if (allowed.includes(origin)) return callback(null, true);
+
+      // Sandbox preview hosts are trusted ONLY outside production. These are
+      // shared parent domains, so accepting them in production would let any
+      // e2b.app or arena.ai tenant make credentialed cross-origin calls with a
+      // victim's session cookie. Production must list its origins explicitly in
+      // WEB_ORIGIN.
+      if (context.env.NODE_ENV !== 'production') {
+        const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+        const isPreview = /^https:\/\/[a-z0-9-]+\.e2b\.app$/.test(origin);
+        const isArena = /^https:\/\/[a-z0-9-]+\.arena\.(ai|dev)$/.test(origin);
+        if (isLocalhost || isPreview || isArena) return callback(null, true);
       }
       return callback(null, false);
     },
@@ -92,6 +98,25 @@ export async function buildApp({
   await app.register(multipart, {
     limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 10 },
     throwFileSizeLimit: false,
+  });
+
+  // A body-less request is not an error. HTTP clients routinely attach
+  // `content-type: application/json` to DELETE/POST actions ("mark all read",
+  // "end session") and send nothing; Fastify's default parser rejects that with
+  // a 400 before any handler runs. Treat an empty body as `{}` so handlers can
+  // decide, and leave real malformed JSON to fail as it should.
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (request, body, done) => {
+    const text = typeof body === 'string' ? body.trim() : '';
+    if (text.length === 0) return done(null, {});
+    try {
+      done(null, JSON.parse(text));
+    } catch {
+      const error = Object.assign(new Error('Body is not valid JSON'), {
+        statusCode: 400,
+        code: 'bad_request',
+      });
+      done(error);
+    }
   });
 
   // ---- request lifecycle ---------------------------------------------------
@@ -114,6 +139,19 @@ export async function buildApp({
       }
     }
     reply.header('x-request-id', request.id);
+  });
+
+  /**
+   * Personal data must not sit in a shared cache or be resurrected by the back
+   * button on a shared machine. Every authenticated response is marked private
+   * and non-storable; exports are `attachment` responses and are covered too.
+   */
+  app.addHook('onSend', async (request, reply, payload) => {
+    if (request.auth) {
+      reply.header('cache-control', 'no-store, private');
+      reply.header('pragma', 'no-cache');
+    }
+    return payload;
   });
 
   app.addHook('onResponse', async (request, reply) => {

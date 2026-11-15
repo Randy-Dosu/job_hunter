@@ -31,10 +31,6 @@ export const resumeUploadMetaSchema = z.object({
     .max(MAX_RESUME_BYTES, 'File is larger than 5 MB'),
 });
 
-export const resumeIdParamSchema = z.object({
-  id: z.string().uuid(),
-});
-
 export const updateFactFromResumeSchema = z.object({
   facts: z.array(
     z.object({

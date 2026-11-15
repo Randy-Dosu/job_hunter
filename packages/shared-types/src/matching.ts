@@ -64,6 +64,12 @@ export interface MatchResult {
   /** 0-100 integer. Deterministic given the same inputs. */
   score: number;
   band: 'strong' | 'good' | 'fair' | 'weak';
+  /**
+   * False when the profile carried no evidence in any dimension that could be
+   * scored (a brand-new account). The score is then a placeholder and must be
+   * presented as "not enough information", never as a compatibility figure.
+   */
+  scoreable: boolean;
   components: ScoreComponent[];
   evidence: MatchEvidence[];
   gaps: MatchGap[];

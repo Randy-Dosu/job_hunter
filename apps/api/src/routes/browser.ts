@@ -3,6 +3,7 @@ import {
   startBrowserSessionSchema,
   fillBrowserFieldSchema,
   pauseBrowserSessionSchema,
+  idParamSchema,
 } from '@job-hunter/validation';
 import type { ApprovedProfileData } from '@job-hunter/shared-types';
 import type { AppContext } from '../app.js';
@@ -26,6 +27,18 @@ export async function registerBrowserRoutes(
 ): Promise<void> {
   const { db, env } = context;
   const featureEnabled = env.FEATURE_BROWSER_ASSISTANT;
+
+  /**
+   * Every browser-assistance route answers the same way when the deployment has
+   * the feature switched off. Checking it in one hook (rather than per handler,
+   * and before any body parsing) keeps the message truthful: a disabled feature
+   * is not a bad request.
+   */
+  const requireFeature = (): void => {
+    if (!featureEnabled) {
+      throw errors.featureDisabled('Browser assistance is switched off on this deployment.');
+    }
+  };
 
   /** Capability + compliance surface for the UI. */
   app.get('/browser-sessions/capabilities', async () => ({
@@ -51,6 +64,10 @@ export async function registerBrowserRoutes(
    */
   app.post('/browser-sessions', async (request, reply) => {
     const user = requireUser(request);
+    // Checked before the body: when the feature is off, the client is told so
+    // rather than given a field-level validation error that implies it is merely
+    // misconfigured.
+    requireFeature();
     const input = startBrowserSessionSchema.parse(request.body);
 
     const job = await db.job.findUnique({
@@ -120,8 +137,10 @@ export async function registerBrowserRoutes(
   /** Map an actual application form's markup into proposed field values. */
   app.post<{ Params: { id: string } }>('/browser-sessions/:id/plan', async (request) => {
     const user = requireUser(request);
+    requireFeature();
+    const { id } = idParamSchema.parse(request.params);
     const session = await db.browserSession.findFirst({
-      where: { id: request.params.id, userId: user.userId },
+      where: { id, userId: user.userId },
     });
     if (!session) throw errors.notFound('Session not found');
     if (isTerminal(session.status as never)) throw errors.conflict('This session has ended');
@@ -175,9 +194,11 @@ export async function registerBrowserRoutes(
 
   app.post<{ Params: { id: string } }>('/browser-sessions/:id/fields', async (request) => {
     const user = requireUser(request);
+    requireFeature();
     const input = fillBrowserFieldSchema.parse(request.body);
+    const { id } = idParamSchema.parse(request.params);
     const session = await db.browserSession.findFirst({
-      where: { id: request.params.id, userId: user.userId },
+      where: { id, userId: user.userId },
     });
     if (!session) throw errors.notFound('Session not found');
 
@@ -205,8 +226,10 @@ export async function registerBrowserRoutes(
   app.post<{ Params: { id: string } }>('/browser-sessions/:id/pause', async (request) => {
     const user = requireUser(request);
     // Ownership is checked before the body is validated.
+    requireFeature();
+    const { id } = idParamSchema.parse(request.params);
     const session = await db.browserSession.findFirst({
-      where: { id: request.params.id, userId: user.userId },
+      where: { id, userId: user.userId },
     });
     if (!session) throw errors.notFound('Session not found');
     const input = pauseBrowserSessionSchema.parse(request.body ?? { reason: 'user_review' });
@@ -245,8 +268,10 @@ export async function registerBrowserRoutes(
   /** End a session (user finished applying or cancelled). */
   app.post<{ Params: { id: string } }>('/browser-sessions/:id/end', async (request) => {
     const user = requireUser(request);
+    requireFeature();
+    const { id } = idParamSchema.parse(request.params);
     const session = await db.browserSession.findFirst({
-      where: { id: request.params.id, userId: user.userId },
+      where: { id, userId: user.userId },
     });
     if (!session) throw errors.notFound('Session not found');
 

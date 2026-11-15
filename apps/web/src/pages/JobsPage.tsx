@@ -336,6 +336,8 @@ function JobCard({
   onDismiss: () => void;
 }) {
   const tone = scoreTone(job.match?.score);
+  // A score is only meaningful when the profile carried verified evidence.
+  const unscoreable = job.match?.scoreable === false;
   const salary = formatSalary({
     salaryMin: job.salary?.min,
     salaryMax: job.salary?.max,
@@ -354,9 +356,15 @@ function JobCard({
               tone.text,
               tone.ring,
             )}
-            aria-label={job.match ? `Match score ${job.match.score}` : 'Not yet scored'}
+            aria-label={
+              unscoreable
+                ? 'Not enough verified information to score'
+                : job.match
+                  ? `Match score ${job.match.score}`
+                  : 'Not yet scored'
+            }
           >
-            {job.match ? job.match.score : '—'}
+            {unscoreable ? '?' : job.match ? job.match.score : '—'}
           </div>
         </div>
 
@@ -373,7 +381,9 @@ function JobCard({
                 {job.location.raw ? ` · ${job.location.raw}` : ''}
               </p>
             </div>
-            {job.match ? (
+            {unscoreable ? (
+              <Badge tone="neutral">Not enough information</Badge>
+            ) : job.match ? (
               <Badge
                 tone={
                   job.match.band === 'strong'
