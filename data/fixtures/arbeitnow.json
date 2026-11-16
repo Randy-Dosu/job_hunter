@@ -1,0 +1,95 @@
+{
+ "data": [
+  {
+   "slug": "junior-full-stack-engineer-cobalt-health-4411",
+   "company_name": "Cobalt Health",
+   "title": "Junior Full Stack Engineer",
+   "description": "<p>Cobalt Health builds scheduling software for clinics in Germany and the Netherlands.</p><h3>What you'll do</h3><ul><li>Build features with React and Node.js</li><li>Maintain PostgreSQL queries and migrations</li><li>Containerise services with Docker</li></ul><h3>Requirements</h3><ul><li>1+ years of experience with JavaScript or TypeScript</li><li>Working knowledge of SQL and REST APIs</li><li>Willingness to learn Docker</li></ul><h3>Nice to have</h3><ul><li>German language skills</li></ul>",
+   "remote": true,
+   "tags": [
+    "react",
+    "node.js",
+    "postgresql",
+    "docker"
+   ],
+   "job_types": [
+    "full-time"
+   ],
+   "location": "Remote (Germany)",
+   "created_at": 1794380000,
+   "url": "https://www.arbeitnow.com/view/junior-full-stack-engineer-cobalt-health-4411"
+  },
+  {
+   "slug": "frontend-developer-fernweh-digital-4412",
+   "company_name": "Fernweh Digital",
+   "title": "Frontend Developer",
+   "description": "<p>Fernweh Digital is a travel-tech agency in Berlin.</p><h3>Responsibilities</h3><ul><li>Develop Vue.js interfaces for booking flows</li><li>Collaborate with designers in Figma</li></ul><h3>Requirements</h3><ul><li>2 years of experience with JavaScript and Vue</li><li>Solid HTML and CSS</li><li>German at B2 level</li></ul>",
+   "remote": true,
+   "tags": [
+    "vue",
+    "javascript",
+    "figma"
+   ],
+   "job_types": [
+    "full-time"
+   ],
+   "location": "Berlin, Germany",
+   "created_at": 1794290000,
+   "url": "https://www.arbeitnow.com/view/frontend-developer-fernweh-digital-4412"
+  },
+  {
+   "slug": "junior-backend-developer-nordlicht-4413",
+   "company_name": "Nordlicht GmbH",
+   "title": "Junior Backend Developer",
+   "description": "<p>Nordlicht builds energy trading software.</p><h3>What you'll do</h3><ul><li>Extend Java services</li><li>Write SQL and tune queries</li></ul><h3>Requirements</h3><ul><li>Java and SQL experience</li><li>Understanding of Docker</li><li>On-site three days per week in Hamburg</li></ul>",
+   "remote": false,
+   "tags": [
+    "java",
+    "sql",
+    "docker"
+   ],
+   "job_types": [
+    "full-time"
+   ],
+   "location": "Hamburg, Germany",
+   "created_at": 1794200000,
+   "url": "https://www.arbeitnow.com/view/junior-backend-developer-nordlicht-4413"
+  },
+  {
+   "slug": "qa-engineer-beacon-4414",
+   "company_name": "Beacon Payments",
+   "title": "QA Engineer",
+   "description": "<p>Beacon Payments is hiring a QA engineer for its remote test automation team.</p><h3>Responsibilities</h3><ul><li>Build Playwright test suites</li><li>Own release regression testing</li></ul><h3>Requirements</h3><ul><li>Experience with automated testing and JavaScript</li><li>CI/CD pipeline experience</li></ul><p>Applications closed on 30 October 2026.</p>",
+   "remote": true,
+   "tags": [
+    "testing",
+    "javascript",
+    "ci/cd"
+   ],
+   "job_types": [
+    "full-time"
+   ],
+   "location": "Remote (Europe)",
+   "created_at": 1792000000,
+   "url": "https://www.arbeitnow.com/view/qa-engineer-beacon-4414"
+  },
+  {
+   "slug": "data-entry-assistant-global-hire-pro-4415",
+   "company_name": "Global Hire Pro",
+   "title": "Junior Frontend Developer (Work From Home)",
+   "description": "<p>Earn $45 per hour building websites from home. No experience needed.</p><h3>Responsibilities</h3><ul><li>Build simple landing pages with HTML and CSS</li></ul><h3>Requirements</h3><ul><li>Pay a one-time $90 training fee to receive your workstation login</li><li>Send bank details for payroll setup before your first shift</li><li>Contact us on WhatsApp to apply immediately</li></ul>",
+   "remote": true,
+   "tags": [
+    "html",
+    "css",
+    "javascript"
+   ],
+   "job_types": [
+    "part-time"
+   ],
+   "location": "Remote (Worldwide)",
+   "created_at": 1794100000,
+   "url": "https://www.arbeitnow.com/view/data-entry-assistant-global-hire-pro-4415"
+  }
+ ]
+}
