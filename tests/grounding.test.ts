@@ -160,11 +160,13 @@ describe("evidence-grounded generation", () => {
     expect(result.unsupported).toEqual([]);
   });
 
-  it("drafts a cover letter from the same facts, with a confirmation placeholder", async () => {
+  it("drafts a sendable cover letter from the same facts", async () => {
     const result = await generate();
     const letter = generateCoverLetter(result.content, job.company, job.title);
     expect(letter).toContain("Brightline Studio");
-    expect(letter).toContain("[Confirm before sending");
+    // Commitments (notice period, salary) are handled as questions that need confirmation,
+    // never as bracketed instructions the employer could receive.
+    expect(letter).not.toContain("[Confirm");
     const problems = validateResume(
       { ...result.content, headline: { text: letter.split("\n").slice(2, 4).join(" "), evidenceIds: result.content.summary.evidenceIds } },
       facts,

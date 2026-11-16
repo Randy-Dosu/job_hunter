@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scoreJob, type EvidenceFact, type MatchableJob, type Preferences, type ProfileSnapshot } from "@/lib/matching/score";
+import { applyFeedback, scoreJob, type EvidenceFact, type MatchableJob, type Preferences, type ProfileSnapshot } from "@/lib/matching/score";
 
 const prefs: Preferences = {
   countries: ["Ghana"],
@@ -156,5 +156,31 @@ describe("scoreJob", () => {
     const result = scoreJob(job(), prefs, profile);
     const total = result.components.reduce((sum, component) => sum + component.weight, 0);
     expect(total).toBe(100);
+  });
+
+  it("lowers a job the user marked not relevant, with the reason shown", () => {
+    const base = scoreJob(job(), prefs, profile);
+    const dismissed = applyFeedback(base, "dismissed");
+    expect(dismissed.score).toBeLessThan(base.score);
+    expect(dismissed.verdict).not.toBe("strong");
+    expect(dismissed.reasons[0].dimension).toBe("feedback");
+    expect(dismissed.components).toEqual(base.components); // the evidence itself never changes
+  });
+
+  it("nudges a job the user marked relevant, but never past a missing requirement", () => {
+    const base = scoreJob(job(), prefs, profile);
+    const relevant = applyFeedback(base, "relevant");
+    expect(relevant.score).toBeGreaterThanOrEqual(base.score);
+    expect(relevant.matchedSkills).toEqual(base.matchedSkills);
+    const withGap = { ...base, missingRequired: ["graphql"], score: 77, verdict: "possible" as const };
+    expect(applyFeedback(withGap, "relevant").verdict).toBe("possible");
+  });
+
+  it("leaves excluded jobs and 'applied' feedback untouched", () => {
+    const excluded = scoreJob(job({ remotePolicy: "onsite", location: "Austin, TX" }), prefs, profile);
+    expect(excluded.verdict).toBe("excluded");
+    expect(applyFeedback(excluded, "relevant").verdict).toBe("excluded");
+    const base = scoreJob(job(), prefs, profile);
+    expect(applyFeedback(base, "applied")).toEqual(base);
   });
 });

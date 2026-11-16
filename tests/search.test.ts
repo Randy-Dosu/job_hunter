@@ -215,3 +215,27 @@ describe("source budgets", () => {
     expect(search.sourceBudget(source.id).allowed).toBe(true);
   });
 });
+
+describe("relevance feedback", () => {
+  it("re-scores one vacancy when feedback is recorded", () => {
+    const match = db.get<{ id: string; job_id: string; score: number; verdict: string }>(
+      "SELECT id, job_id, score, verdict FROM job_matches WHERE user_id = ? AND verdict IN ('strong','possible') ORDER BY score DESC LIMIT 1",
+      USER,
+    )!;
+    db.run("UPDATE job_matches SET feedback = 'dismissed' WHERE id = ?", match.id);
+    search.rescanMatches(USER, { jobId: match.job_id });
+    const after = db.get<{ score: number; verdict: string; reasons_json: string }>(
+      "SELECT score, verdict, reasons_json FROM job_matches WHERE id = ?",
+      match.id,
+    )!;
+    expect(after.score).toBeLessThan(match.score);
+    expect(after.verdict).not.toBe("strong");
+    expect(JSON.parse(after.reasons_json)[0].dimension).toBe("feedback");
+  });
+
+  it("leaves every other match untouched", () => {
+    const others = db.all<{ score: number }>("SELECT score FROM job_matches WHERE user_id = ?", USER);
+    search.rescanMatches(USER);
+    expect(db.all("SELECT id FROM job_matches WHERE user_id = ?", USER).length).toBe(others.length);
+  });
+});

@@ -285,3 +285,67 @@ describe("admin boundary", () => {
     expect(unknown.status).toBe(404);
   });
 });
+
+describe("activity and search history endpoints", () => {
+  it("returns only the caller's audit trail", async () => {
+    db.insert("audit_events", {
+      id: crypto.randomUUID(),
+      user_id: users.alice,
+      actor: "user",
+      action: "test.alice_event",
+      entity_type: "job",
+      entity_id: "",
+      metadata_json: "{}",
+      created_at: new Date().toISOString(),
+    });
+
+    session.token = tokens.bob;
+    const { GET } = await import("@/app/api/audit-events/route");
+    const bobResponse = await GET(new Request("http://localhost/api/audit-events"));
+    expect(bobResponse.status).toBe(200);
+    const bob = (await bobResponse.json()) as { events: { action: string }[] };
+    expect(bob.events.some((event) => event.action === "test.alice_event")).toBe(false);
+
+    session.token = tokens.alice;
+    const aliceResponse = await GET(new Request("http://localhost/api/audit-events?limit=5"));
+    const alice = (await aliceResponse.json()) as { events: { action: string }[] };
+    expect(alice.events.some((event) => event.action === "test.alice_event")).toBe(true);
+    expect(alice.events.length).toBeLessThanOrEqual(5);
+  });
+
+  it("rejects an activity read without a session", async () => {
+    const { GET } = await import("@/app/api/audit-events/route");
+    expect((await GET(new Request("http://localhost/api/audit-events"))).status).toBe(401);
+  });
+
+  it("does not expose another user's search run", async () => {
+    const runId = crypto.randomUUID();
+    db.insert("search_runs", {
+      id: runId,
+      user_id: users.alice,
+      trigger: "manual",
+      run_key: null,
+      started_at: new Date().toISOString(),
+      finished_at: new Date().toISOString(),
+      status: "succeeded",
+      query_config_json: "{}",
+      counts_json: "{}",
+      error_summary: "",
+    });
+
+    session.token = tokens.bob;
+    const { GET } = await import("@/app/api/search-runs/[id]/route");
+    const denied = await GET(new Request(`http://localhost/api/search-runs/${runId}`), {
+      params: Promise.resolve({ id: runId }),
+    });
+    expect(denied.status).toBe(404);
+
+    session.token = tokens.alice;
+    const allowed = await GET(new Request(`http://localhost/api/search-runs/${runId}`), {
+      params: Promise.resolve({ id: runId }),
+    });
+    expect(allowed.status).toBe(200);
+    const body = (await allowed.json()) as { run: { id: string; status: string } };
+    expect(body.run.id).toBe(runId);
+  });
+});

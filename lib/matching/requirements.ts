@@ -200,7 +200,7 @@ export function skillLabel(skill: string): string {
     gcp: "GCP",
     azure: "Azure",
     "ci/cd": "CI/CD",
-    git: " Git",
+    git: "Git",
     linux: "Linux",
     testing: "Automated testing",
     "ui/ux": "UI/UX",

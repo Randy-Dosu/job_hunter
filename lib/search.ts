@@ -1,6 +1,6 @@
 import { all, get, insert, nowIso, parseJson, run, uid } from "@/lib/db";
 import { getProfileContext, toPreferences } from "@/lib/profile";
-import { scoreJob } from "@/lib/matching/score";
+import { applyFeedback, scoreJob } from "@/lib/matching/score";
 import { adapters } from "@/lib/sources/adapters";
 import { jobKeys } from "@/lib/sources/normalize";
 import type { NormalizedJob, SearchCriteria } from "@/lib/sources/types";
@@ -284,12 +284,19 @@ export async function recheckJobLiveness(now: Date = new Date()): Promise<Livene
   return result;
 }
 
-export function rescanMatches(userId: string) {
+export function rescanMatches(userId: string, options: { jobId?: string } = {}) {
   const context = getProfileContext(userId);
-  const jobs = all<JobRow>("SELECT * FROM jobs");
+  const jobs = options.jobId
+    ? all<JobRow>("SELECT * FROM jobs WHERE id = ?", options.jobId)
+    : all<JobRow>("SELECT * FROM jobs");
   let strong = 0;
   for (const job of jobs) {
-    const result = scoreJob(
+    const existing = get<{ id: string; feedback: string | null }>(
+      "SELECT id, feedback FROM job_matches WHERE user_id = ? AND job_id = ?",
+      userId,
+      job.id,
+    );
+    const result = applyFeedback(scoreJob(
       {
         title: job.title,
         company: job.company,
@@ -305,9 +312,8 @@ export function rescanMatches(userId: string) {
       },
       context.preferences,
       context.snapshot,
-    );
+    ), existing?.feedback ?? null);
     if (result.verdict === "strong") strong += 1;
-    const existing = get<{ id: string }>("SELECT id FROM job_matches WHERE user_id = ? AND job_id = ?", userId, job.id);
     if (existing) {
       run(
         `UPDATE job_matches SET score = ?, confidence = ?, verdict = ?, reasons_json = ?, gaps_json = ?, components_json = ?, matched_at = ? WHERE id = ?`,

@@ -41,12 +41,15 @@ SQLite (data/job-hunter.db)              sources/adapters.ts, sources/normalize.
    due alerts. `POST /api/search-runs` remains the manual, user-initiated path.
 2. Run key `${userId}:scheduled:${YYYY-MM-DD}` is inserted; a unique index makes a
    duplicate scheduled run a no-op (idempotency).
-3. Enabled adapters run in parallel (`Promise.all`), each with an 8s timeout.
+3. Enabled adapters run in parallel (`Promise.all`), each with an 8s timeout and one bounded
+   retry (400 ms backoff) for transient failures — network errors, 429 and 5xx. A 4xx is final.
 4. Every raw record is normalized (`lib/sources/normalize.ts`): HTML → text, remote
    policy, seniority, employment type, salary, posted date, deadline detection.
 5. Dedupe order: `(source_id, external_id)` → canonical URL → employer/title/location
    fingerprint within 30 days → insert.
-6. `rescanMatches()` re-scores every job for this user (bounded, deterministic).
+6. `rescanMatches()` re-scores every job for this user (bounded, deterministic), applying the
+   stored relevance feedback (`applyFeedback()`): +4 for `relevant`, −9 and a capped verdict for
+   `not_relevant`/`dismissed`. Hard filters are never overridden.
 7. Counts, per-source status and errors are stored on the run; a digest notification
    is written; an audit event records the run.
 
@@ -92,6 +95,25 @@ in the UI and overridable only by adjusting preferences.
 
 LLM use is optional and confined to step 5; anything it returns is validated before
 acceptance, with an automatic fallback to the deterministic text.
+
+## Application material (`lib/resume/application-materials.ts`)
+
+1. **Find the questions.** Sentences the listing writes as questions (up to five, verbatim and
+   de-duplicated) plus standard form prompts: why this role, relevant experience, skills, right to
+   work, sponsorship (when relevant), salary, start date.
+2. **Classify intent** so the same question is never asked twice and a listing question replaces
+   the standard prompt it overlaps with.
+3. **Answer from verified facts only.** Experience, skills and "why" answers quote the evidence and
+   carry its ids. A question naming an unverified skill becomes a placeholder, never a claim.
+4. **Mark commitments.** Salary, notice period, right to work and sponsorship are
+   `needs_confirmation`; they are prefilled from preferences where possible and always require the
+   user's own confirmation.
+5. **Gate.** `answerProblems()` refuses an unconfirmed answer, an empty one, or a confirmed answer
+   that still contains a bracketed placeholder. It runs in the API route *and* in
+   `approvePackage()`. The confirmation flags are part of `computePackageHash()`, so editing an
+   answer invalidates an existing approval.
+6. Nothing is persisted until the package is assembled; the draft endpoint is read-only apart from
+   an audit event.
 
 ## Approval state machine (`lib/approvals.ts`)
 

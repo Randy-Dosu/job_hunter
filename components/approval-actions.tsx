@@ -24,6 +24,7 @@ export function ApprovalActions({
   applicationStatus,
   resumeApproved,
   unsupportedCount,
+  unconfirmedAnswers,
 }: {
   packageId: string;
   destinationUrl: string;
@@ -34,6 +35,7 @@ export function ApprovalActions({
   applicationStatus: string | null;
   resumeApproved: boolean;
   unsupportedCount: number;
+  unconfirmedAnswers: number;
 }) {
   const router = useRouter();
   const [consent, setConsent] = useState(false);
@@ -135,7 +137,7 @@ export function ApprovalActions({
     }
   };
 
-  const blocked = !resumeApproved || unsupportedCount > 0;
+  const blocked = !resumeApproved || unsupportedCount > 0 || unconfirmedAnswers > 0;
   let destinationHost = destinationUrl;
   try {
     destinationHost = new URL(destinationUrl).hostname.replace(/^www\./, "");
@@ -175,7 +177,9 @@ export function ApprovalActions({
         <p className="rounded-md bg-clay-50 px-3 py-2 text-[11px] text-clay-700">
           {unsupportedCount > 0
             ? "This package contains statements that are not backed by verified evidence. Resolve them in the resume workspace first."
-            : "The tailored resume has not been approved by you yet. Approve it in the resume workspace first."}
+            : unconfirmedAnswers > 0
+              ? `${unconfirmedAnswers} answer${unconfirmedAnswers === 1 ? "" : "s"} to application questions still need${unconfirmedAnswers === 1 ? "s" : ""} your confirmation. Open the resume workspace to review the wording, then assemble the package again.`
+              : "The tailored resume has not been approved by you yet. Approve it in the resume workspace first."}
         </p>
       ) : null}
 

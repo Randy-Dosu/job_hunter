@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { all, get, insert, nowIso, parseJson, run, uid } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { resumeToText } from "@/lib/resume/grounding";
+import { answerProblems, canonicalAnswers } from "@/lib/resume/application-materials";
 import type { TailoredResumeContent } from "@/lib/resume/types";
 import type { JobRow } from "@/lib/search";
 
@@ -45,7 +46,7 @@ export function computePackageHash(input: {
         destinationUrl: input.destinationUrl,
         resumeText: input.resumeText.replace(/\s+\n/g, "\n").trim(),
         coverLetter: input.coverLetter.trim(),
-        answers: input.answers,
+        answers: canonicalAnswers(input.answers),
       }),
     )
     .digest("hex");
@@ -101,12 +102,13 @@ export function createPackage(input: {
   coverLetter: string;
   answers: { question: string; answer: string }[];
 }): PackageRow {
+  const answers = canonicalAnswers(input.answers);
   const hash = computePackageHash({
     jobId: input.jobId,
     destinationUrl: input.destinationUrl,
     resumeText: input.resumeText,
     coverLetter: input.coverLetter,
-    answers: input.answers,
+    answers,
   });
   const existing = get<PackageRow>(
     "SELECT * FROM application_packages WHERE user_id = ? AND job_id = ? ORDER BY created_at DESC LIMIT 1",
@@ -119,7 +121,7 @@ export function createPackage(input: {
       `UPDATE application_packages SET resume_id = ?, cover_letter = ?, answers_json = ?, destination_url = ?, package_hash = ?, status = 'PENDING_APPROVAL', updated_at = ? WHERE id = ?`,
       input.resumeId,
       input.coverLetter,
-      JSON.stringify(input.answers),
+      JSON.stringify(answers),
       input.destinationUrl,
       hash,
       now,
@@ -136,7 +138,7 @@ export function createPackage(input: {
     job_id: input.jobId,
     resume_id: input.resumeId,
     cover_letter: input.coverLetter,
-    answers_json: JSON.stringify(input.answers),
+    answers_json: JSON.stringify(answers),
     destination_url: input.destinationUrl,
     package_hash: hash,
     status: "PENDING_APPROVAL",
@@ -175,6 +177,11 @@ export function approvePackage(userId: string, packageId: string, method = "expl
   if (!loaded.resume) return { ok: false, error: "Attach a tailored resume before approving.", code: "missing_resume" };
   if (loaded.pkg.package_hash !== loaded.currentHash) {
     return { ok: false, error: "The package changed since it was assembled. Review it again, then approve.", code: "hash_mismatch" };
+  }
+  // FR-037: an answer that needs the user's confirmation cannot slip into an approval.
+  const problems = answerProblems(parseJson(loaded.pkg.answers_json, []));
+  if (problems.length) {
+    return { ok: false, error: problems[0], code: "answers_need_confirmation" };
   }
   const hash = loaded.currentHash;
   insert("application_approvals", {

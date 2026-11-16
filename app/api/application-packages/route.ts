@@ -4,6 +4,7 @@ import { audit } from "@/lib/audit";
 import { fail, json, withUser } from "@/lib/api";
 import { createPackage } from "@/lib/approvals";
 import { generateCoverLetter } from "@/lib/resume/generate";
+import { answerProblems } from "@/lib/resume/application-materials";
 import { resumeToText } from "@/lib/resume/grounding";
 import type { TailoredResumeContent } from "@/lib/resume/types";
 
@@ -12,7 +13,20 @@ const schema = z.object({
   resumeId: z.string().uuid().nullable().optional(),
   includeCoverLetter: z.boolean().optional().default(false),
   coverLetter: z.string().max(8000).optional(),
-  answers: z.array(z.object({ question: z.string().max(300), answer: z.string().max(2000) })).max(20).optional(),
+  answers: z
+    .array(
+      z.object({
+        question: z.string().min(1).max(300),
+        answer: z.string().min(1).max(2000),
+        status: z.enum(["grounded", "needs_confirmation"]).optional(),
+        source: z.enum(["listing", "standard"]).optional(),
+        evidenceIds: z.array(z.string().max(80)).max(20).optional(),
+        confirmationNote: z.string().max(400).optional(),
+        confirmed: z.boolean().optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 export async function GET() {
@@ -39,6 +53,10 @@ export async function POST(request: Request) {
     );
     if (!job) return fail("Job not found.", 404);
     if (job.status === "closed") return fail("This vacancy is closed.", 409);
+
+    if (answers && answerProblems(answers).length) {
+      return fail(answerProblems(answers)[0], 422, { code: "answers_need_confirmation", problems: answerProblems(answers) });
+    }
 
     const resume = resumeId
       ? get<{ id: string; structured_content_json: string; status: string }>(

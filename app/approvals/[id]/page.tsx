@@ -7,6 +7,7 @@ import { Callout, CompanyMark, SourceLink, formatDate } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { all, parseJson } from "@/lib/db";
 import { loadPackage } from "@/lib/approvals";
+import { answerProblems, canonicalAnswers } from "@/lib/resume/application-materials";
 import { resumeToText } from "@/lib/resume/grounding";
 import type { TailoredResumeContent, UnsupportedClaim } from "@/lib/resume/types";
 
@@ -22,7 +23,8 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
   const content = resume ? parseJson<TailoredResumeContent>(resume.structured_content_json, {} as TailoredResumeContent) : null;
   const unsupported = resume ? parseJson<UnsupportedClaim[]>(resume.unsupported_json, []) : [];
   const approvalValid = Boolean(approval && approval.approval_hash === currentHash);
-  const answers = parseJson<{ question: string; answer: string }[]>(pkg.answers_json, []);
+  const answers = canonicalAnswers(parseJson(pkg.answers_json, []));
+  const unconfirmedAnswers = answerProblems(answers).length;
   const history = all<{ action: string; created_at: string; actor: string; metadata_json: string }>(
     "SELECT action, created_at, actor, metadata_json FROM audit_events WHERE user_id = ? AND entity_id = ? ORDER BY created_at DESC LIMIT 8",
     user.id,
@@ -86,11 +88,23 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
               {answers.length ? (
                 <div className="mt-3 border-t border-line pt-3">
                   <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-muted">Application questions</p>
-                  <dl className="mt-1.5 space-y-2">
+                  <dl className="mt-1.5 space-y-2.5">
                     {answers.map((answer) => (
                       <div key={answer.question}>
-                        <dt className="text-[11.5px] font-medium text-ink">{answer.question}</dt>
-                        <dd className="mt-0.5 text-[12px] text-ink-soft">{answer.answer}</dd>
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <dt className="text-[11.5px] font-medium text-ink">{answer.question}</dt>
+                          <span className={answer.status === "grounded" ? "chip-moss" : "chip-warn"}>
+                            {answer.status === "grounded" ? "verified facts" : answer.confirmed ? "confirmed by you" : "needs confirmation"}
+                          </span>
+                        </div>
+                        <dd className="mt-0.5 whitespace-pre-wrap text-[12px] leading-relaxed text-ink-soft">{answer.answer}</dd>
+                        <p className="mt-0.5 text-[10px] text-muted">
+                          {answer.source === "listing" ? "Asked in the listing" : "Standard form question"}
+                          {answer.evidenceIds.length
+                            ? ` · ${answer.evidenceIds.length} evidence link${answer.evidenceIds.length === 1 ? "" : "s"}`
+                            : ""}
+                          {answer.status === "needs_confirmation" && answer.confirmed ? " · confirmed by you" : ""}
+                        </p>
                       </div>
                     ))}
                   </dl>
@@ -166,6 +180,7 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
                 applicationStatus={(application?.status as string) ?? null}
                 resumeApproved={resume?.status === "user_approved"}
                 unsupportedCount={unsupported.length}
+                unconfirmedAnswers={unconfirmedAnswers}
               />
             </div>
           </section>

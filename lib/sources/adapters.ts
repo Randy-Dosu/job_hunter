@@ -6,20 +6,43 @@ import type { FetchOutcome, JobSourceAdapter, NormalizedJob, SearchCriteria, Sou
 
 const FIXTURE_FALLBACK = process.env.SOURCE_FIXTURE_FALLBACK !== "false";
 const TIMEOUT_MS = 8_000;
+/** Bounded retry: one extra attempt, short backoff, only for transient failures. */
+const MAX_ATTEMPTS = 2;
+const BACKOFF_MS = 400;
 
 type Json = Record<string, unknown>;
 
+class SourceHttpError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message);
+  }
+  /** 429 and 5xx may clear; 4xx (404, 403) will not. */
+  get transient(): boolean {
+    return this.status === 429 || this.status >= 500;
+  }
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function fetchJson(url: string): Promise<unknown> {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": "JobHunter/0.1 (+https://job-hunter.app/source-policy)",
-      Accept: "application/json",
-    },
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status} from ${new URL(url).host}`);
-  return res.json();
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "JobHunter/0.1 (+https://job-hunter.app/source-policy)",
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        cache: "no-store",
+      });
+      if (!res.ok) throw new SourceHttpError(res.status, `HTTP ${res.status} from ${new URL(url).host}`);
+      return await res.json();
+    } catch (error) {
+      const transient = error instanceof SourceHttpError ? error.transient : true;
+      if (attempt >= MAX_ATTEMPTS || !transient) throw error;
+      await sleep(BACKOFF_MS * attempt);
+    }
+  }
 }
 
 export function extractDeadline(text: string): string | null {

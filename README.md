@@ -36,7 +36,7 @@ ADMIN_EMAILS=you@example.com npm run dev
 ```
 
 ```bash
-npm test          # 103 tests
+npm test          # 130 tests
 npm run db:reset  # delete the database; a clean schema is recreated on the next request
 npm run build     # production build
 ```
@@ -53,7 +53,7 @@ npm run build     # production build
 | Job feed | `/jobs` | Strong / possible / low / excluded buckets with reasons |
 | Job detail | `/jobs/[id]` | 100-point score broken down, evidence, gaps, red-flag warnings |
 | Resume & facts | `/resume` | Every fact with provenance and a verification state |
-| Resume workspace | `/resumes/[id]` | Tailored draft, change log, evidence check, PDF/DOCX export |
+| Resume workspace | `/resumes/[id]` | Tailored draft, change log, evidence check, cover letter + answers, PDF/DOCX export |
 | Approval centre | `/approvals` | Package review, hash integrity, consent gate |
 | Tracker | `/applications` | Statuses, notes, next actions, manual outcomes |
 | Settings | `/settings` | Sources, schedule, privacy, export, deletion, audit trail |
@@ -65,9 +65,12 @@ npm run build     # production build
 3. **Score** — a transparent weighted model produces a score, confidence, reasons and gaps.
 4. **Tailor** — the generator selects and reorders verified facts for one vacancy and logs every change.
 5. **Validate** — each claim is traced to evidence; unsupported skills, numbers or employers are blocked.
-6. **Approve** — you approve the resume, then the exact package (hash-bound).
-7. **Hand off** — you are taken to the employer's official page; we never claim a submission we cannot confirm.
-8. **Track** — status, confirmation reference, notes and an append-only audit trail.
+6. **Draft the application material** — a cover letter and answers to the questions the listing
+   asks (plus standard form prompts), each with its evidence, each commitment marked for you.
+7. **Approve** — you confirm every answer that needs it, approve the resume, then the exact
+   package (hash-bound).
+8. **Hand off** — you are taken to the employer's official page; we never claim a submission we cannot confirm.
+9. **Track** — status, confirmation reference, notes and an append-only audit trail.
 
 ---
 
@@ -112,6 +115,13 @@ answers and destination URL. `application_approvals` stores that hash. Handoff
 re-computes the hash and refuses to proceed if it differs, if the approval was
 revoked, if the vacancy closed, or if a submission already exists. Editing a resume
 revokes related approvals automatically.
+
+**Answer confirmation.** `lib/resume/application-materials.ts` drafts only from verified facts.
+Anything that is a commitment — salary, notice period, right to work, sponsorship — is marked
+`needs_confirmation` and the approval gate refuses the package until you confirm the exact wording
+(`answerProblems()` in `lib/approvals.ts`). A confirmed answer that still contains a bracketed
+placeholder is refused too. The confirmed answers are part of the package hash, so editing them
+after approval invalidates it.
 
 **Hard filters beat scores.** Excluded employers/keywords/locations, closed
 vacancies, on-site roles when you require remote, and "no sponsorship" roles when
@@ -180,9 +190,10 @@ adds anything unsupported, the deterministic summary is kept instead.
 | GET/PUT | `/api/preferences` | Market and schedule |
 | GET/POST | `/api/resumes` | Base resume upload (TXT/MD/PDF/DOCX) + parsing |
 | GET/POST | `/api/evidence` · PATCH/DELETE `/api/evidence/[id]` | Verified facts |
-| GET/POST | `/api/search-runs` | Search history / manual trigger |
+| GET/POST | `/api/search-runs` · GET `/api/search-runs/[id]` | Search history / manual trigger / one run |
 | GET | `/api/jobs` · `/api/jobs/[id]` | Ranked feed and match evidence |
 | POST | `/api/jobs/[id]/tailor-resume` | Generate a grounded draft |
+| POST | `/api/jobs/[id]/application-materials` | Draft a cover letter + answers (nothing stored) |
 | POST | `/api/jobs/[id]/feedback` | Relevance feedback |
 | GET/PATCH | `/api/tailored-resumes/[id]` | Draft, edits, resume approval |
 | GET | `/api/tailored-resumes/[id]/export?format=pdf\|docx\|txt` | Export |
@@ -192,6 +203,7 @@ adds anything unsupported, the deterministic summary is kept instead.
 | POST | `/api/applications/[id]/submit` | Record a confirmed submission |
 | GET/POST | `/api/notifications` | Digest list / mark read |
 | GET | `/api/export` · POST `/api/account/delete` | Portability and erasure |
+| GET | `/api/audit-events` | The caller's own activity trail |
 | GET | `/api/sources` | Source catalogue with terms review |
 | POST | `/api/jobs/import` | Add a job by URL (one polite fetch, SSRF guard, daily cap) |
 | GET/POST | `/api/resume-variants` · DELETE `/api/resume-variants/[id]` | Role-family variants |
@@ -220,13 +232,34 @@ tests/manual-import.test.ts JobPosting parsing, SSRF guard, dedupe, daily cap
 tests/variants.test.ts     variant CRUD, resolution by role family, grounded re-ordering
 tests/migration.test.ts    legacy database upgrades in place, idempotently
 tests/fresh-start.test.ts  no seeded accounts, jobs or sample profile; ADMIN_EMAILS only
+tests/application-materials.test.ts  question detection, grounded answers, confirmation gate, hash binding
+tests/adapters.test.ts     bounded retry/backoff on transient source failures, no retry on 4xx
 ```
 
 Source budgets configured in the admin console are enforced: every fetch is logged and a
 source that has spent its hourly or daily allowance is skipped for that run with the
 reason recorded on the search run.
 
-`npm test` → 103 passing.
+`npm test` → 130 passing.
+
+## Cover letter and application answers
+
+`POST /api/jobs/[id]/application-materials` drafts the material for one vacancy without storing
+anything. Questions come from the listing itself (sentences it asks as questions) plus standard
+form prompts — why this role, relevant experience, skills, right to work, sponsorship, salary,
+start date — and are de-duplicated by intent. Answers are built from verified facts and carry their
+evidence ids; a question naming a skill you have not verified is answered with an explicit
+placeholder rather than a claim. In the resume workspace you edit both, tick the items marked
+**needs your confirmation**, and only then assemble the package. The server re-checks the same rule
+in `approvePackage()`, so a client cannot skip it, and the confirmation state is part of the hash
+that binds the approval.
+
+## Matching feedback
+
+“Was this relevant?” on a job stores your verdict and immediately re-scores that vacancy:
+`relevant` nudges the score up by 4 (bounded, only when no requirement is missing), `not relevant`
+and `dismissed` drop it by 9 and cap the verdict below strong. Hard filters are never overridden,
+and the evidence components themselves never change — the adjustment is shown as its own reason.
 
 ## Notifications, reminders and alerts
 
@@ -259,10 +292,68 @@ accessibility/design-system keywords). When a vacancy title matches the variant'
 family it is applied automatically; only already-verified evidence is re-ordered or
 re-weighted, and the change log records that a variant was used.
 
+## PRD coverage
+
+Every functional requirement in [`docs/PRD.md`](docs/PRD.md) §5 is implemented except one optional
+capability, which is called out in the limits below.
+
+| FR | Requirement | Where |
+| --- | --- | --- |
+| 001 | Account creation and secure sign-in | `app/api/auth/*`, `lib/auth.ts` |
+| 002 | Market, remote/authorisation, titles, seniority, salary, exclusions, sources | `components/onboarding-wizard.tsx`, `lib/preferences.ts` |
+| 003 | Search time, timezone, days, notification channel | `lib/schedule.ts`, `components/settings-form.tsx` |
+| 004 | Pause, resume, run now | `schedule_enabled`, `POST /api/search-runs` |
+| 005 | Facts with verified / unverified / outdated states | `app/resume/page.tsx`, `app/api/evidence/*` |
+| 006 | Resume upload with review before saving | `lib/resume/parse.ts`, `app/api/resumes/route.ts` |
+| 010 | Scheduled search runs | `app/api/cron/search/route.ts` |
+| 011 | Only enabled sources; source, query, time, status recorded | `lib/search.ts`, `search_runs`, `source_fetch_log` |
+| 012 | Normalised schema; missing fields stay unknown | `lib/sources/normalize.ts` |
+| 013 | Dedupe by source id, canonical URL, fingerprint | `lib/search.ts`, `lib/text.ts` |
+| 014 | Liveness check with an explicit uncertain state | `recheckJobLiveness`, `status` |
+| 015 | Source attribution and retrieval timestamps | `jobs.source_id`, `first_seen_at`, `last_seen_at` |
+| 016 | Vacancy-change detection and alerts | `lib/notify.ts`, `job_changed` notifications |
+| 017 | Add a job by URL, bounded | `POST /api/jobs/import`, `lib/sources/manual.ts` |
+| 020 | Score with a human-readable explanation | `lib/matching/score.ts`, job detail |
+| 021 | All scoring dimensions | same, `components/job-card.tsx` |
+| 022 | Hard constraints disqualify regardless of score | `hardFilters` |
+| 023 | Strong / possible / low / excluded views | `app/jobs/page.tsx` |
+| 024 | Missing vs required qualifications, required vs preferred | `match.gaps`, job detail |
+| 025 | Feedback tunes ranking | `applyFeedback()`, `app/api/jobs/[id]/feedback` |
+| 030 | Job-specific resume from approved base + verified facts | `lib/resume/generate.ts` |
+| 031 | Reorder, summarise, emphasise truthfully | same, change log |
+| 032 | Never invent skills, titles, employers, dates, degrees, numbers | `lib/resume/grounding.ts` |
+| 033 | Every claim traceable to evidence | `Claim.evidenceIds` |
+| 034 | Change summary (added / removed / rewritten) | resume workspace |
+| 035 | Edit the draft, approve it | `PATCH /api/tailored-resumes/[id]` |
+| 036 | ATS-readable PDF (and DOCX) | `lib/resume/render.ts` |
+| 037 | Cover letter and application answers with confirmation markers | `lib/resume/application-materials.ts`, `app/api/jobs/[id]/application-materials` |
+| 038 | Multiple resume variants per role family | `lib/resume/variants.ts` |
+| 040 | No submission without a job- and package-specific approval | `approvePackage()`, `handoffPackage()` |
+| 041 | Approval screen shows every material and the destination | `app/approvals/[id]/page.tsx` |
+| 042 | Approval bound to vacancy + package version | `computePackageHash()` |
+| 043 | Approve & hand off, open the page, save, reject | `components/approval-actions.tsx` |
+| 044 | Approval time, version, destination, attempt, result recorded | `application_approvals`, `applications`, audit |
+| 045 | CAPTCHA / unsupported auth stops and hands over | manual handoff only; no bypass anywhere |
+| 046 | Never claims a submission without confirmation | `markSubmitted()` requires a reference |
+| 047 | Browser-assisted form filling | **not built** — see limits |
+| 050 | Daily digest | `lib/notify.ts`, `app/api/notifications` |
+| 051 | Immediate alerts for high-fit / closing jobs | `lib/notify.ts`, cron tick |
+| 052 | Saved → submitted → interview … statuses | `app/applications/page.tsx` |
+| 053 | Record outcomes manually | `PATCH /api/applications/[id]` |
+| 054 | Configurable follow-up reminders | `applications.next_action_at`, reminders |
+| 060 | Admins enable sources, set limits, inspect failures | `app/admin/sources/page.tsx` |
+| 061 | Access method, terms review, limits, markets per source | `lib/db/catalogue.ts`, compliance matrix |
+| 062 | Respect robots, terms, quotas; no bypass | `docs/source-compliance-matrix.md`, budgets |
+| 063 | Review match quality, parse errors, bad results | admin console quality panel |
+
 ## Known limits (intentional for this MVP)
 
 - Manual handoff is the only application route; there is no automated submission, by design.
-- No browser form-filling: unsupported destinations always hand control to the user.
+- **No browser form-filling (FR-047).** The PRD lists it as an optional P1 capability. Automating a
+  browser means storing an employer session, defeating per-site access controls and keeping a
+  headless browser next to the database — none of which this deployment can do safely, and the
+  same outcome is reached by copying the confirmed answers into the employer's form yourself.
+  The handoff screen links to the official page and the package stays open until you confirm.
 - Email requires a provider; without one the row is stored and marked suppressed.
 - The rate limiter is per process. Multi-instance deployments should enforce the same
   limits at the edge or move the store to Redis.

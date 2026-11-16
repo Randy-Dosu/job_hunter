@@ -180,8 +180,6 @@ export function generateCoverLetter(content: TailoredResumeContent, company: str
     "Thank you for your time and consideration.",
     "",
     content.header.name,
-    "",
-    "[Confirm before sending: notice period and earliest start date]",
   ]
     .filter((line, index, all) => line !== "" || all[index - 1] !== "")
     .join("\n");

@@ -561,3 +561,43 @@ export function scoreJob(job: MatchableJob, prefs: Preferences, profile: Profile
     redFlags: requirements.redFlags,
   };
 }
+
+export type FeedbackSignal = string | null | undefined;
+
+/**
+ * FR-025: relevance feedback tunes the ranking. The adjustment is small, bounded and
+ * explained, so a single click can never fake a qualification — it only moves a job
+ * within its own bucket and can never overcome a hard filter.
+ */
+export function applyFeedback(result: MatchResult, feedback: FeedbackSignal): MatchResult {
+  if (!feedback || feedback === "applied") return result;
+  if (feedback !== "relevant" && feedback !== "not_relevant" && feedback !== "dismissed") return result;
+  if (result.verdict === "excluded") return result;
+
+  const delta = feedback === "relevant" ? 4 : -9;
+  const score = Math.round(Math.min(100, Math.max(0, result.score + delta)));
+  let verdict = result.verdict;
+  if (feedback === "relevant") {
+    if (score >= 75 && result.missingRequired.length === 0) verdict = "strong";
+    else if (score >= 55 && verdict === "low") verdict = "possible";
+  } else if (score < 55) {
+    verdict = "low";
+  } else if (verdict === "strong") {
+    verdict = "possible";
+  }
+
+  const reason =
+    feedback === "relevant"
+      ? {
+          dimension: "feedback",
+          text: "You marked this as relevant, so it is ranked slightly higher.",
+          strength: "supporting" as const,
+        }
+      : {
+          dimension: "feedback",
+          text: `You marked this as ${feedback === "dismissed" ? "dismissed" : "not relevant"}, so it is ranked lower.`,
+          strength: "warning" as const,
+        };
+
+  return { ...result, score, verdict, reasons: [reason, ...result.reasons] };
+}

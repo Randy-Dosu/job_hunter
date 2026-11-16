@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   BadgeCheck,
   Check,
@@ -17,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import type { ChangeLogEntry, TailoredResumeContent, UnsupportedClaim } from "@/lib/resume/types";
+import { ApplicationMaterials } from "./application-materials";
 
 type Metadata = {
   engine: string;
@@ -67,7 +67,6 @@ export function ResumeWorkspace({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showBase, setShowBase] = useState(false);
-  const [includeCover, setIncludeCover] = useState(true);
   const [approved, setApproved] = useState(status === "user_approved");
 
   const save = async () => {
@@ -117,25 +116,6 @@ export function ResumeWorkspace({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Approval failed");
     } finally {
-      setBusy(null);
-    }
-  };
-
-  const assemble = async () => {
-    setBusy("package");
-    setError(null);
-    try {
-      const res = await fetch("/api/application-packages", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jobId: job.id, resumeId, includeCoverLetter: includeCover }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not assemble the package");
-      router.push(data.redirect ?? `/approvals/${data.packageId}`);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Assembly failed");
       setBusy(null);
     }
   };
@@ -346,6 +326,8 @@ export function ResumeWorkspace({
           </ol>
         </div>
 
+        <ApplicationMaterials jobId={job.id} resumeId={resumeId} approved={approved} packageId={packageId} />
+
         <div className="card card-pad">
           <h3 className="text-sm font-semibold text-ink">Your review</h3>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -385,30 +367,6 @@ export function ResumeWorkspace({
           <p className="mt-2 text-[10px] leading-relaxed text-muted">
             Approving the resume is not approving an application. Editing it afterwards invalidates any application approval.
           </p>
-
-          <div className="mt-4 border-t border-line pt-3">
-            <label className="flex items-center gap-2 text-[11px] text-ink-soft">
-              <input type="checkbox" checked={includeCover} onChange={(event) => setIncludeCover(event.target.checked)} />
-              Include a cover letter drafted from the same verified facts
-            </label>
-            {packageId ? (
-              <Link href={`/approvals/${packageId}`} className="btn-secondary mt-2 w-full">
-                Open existing package
-              </Link>
-            ) : (
-              <button
-                type="button"
-                className="btn-primary mt-2 w-full"
-                onClick={assemble}
-                disabled={!approved || busy === "package"}
-                title={!approved ? "Approve the resume first" : undefined}
-              >
-                {busy === "package" ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-                Assemble application package
-              </button>
-            )}
-            {!approved ? <p className="mt-1 text-center text-[10px] text-muted">Approve the resume to unlock the approval centre.</p> : null}
-          </div>
         </div>
 
         {error ? <p className="rounded-md bg-clay-50 px-3 py-2 text-xs text-clay-700">{error}</p> : null}
